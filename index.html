@@ -3,75 +3,109 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Storm Globe</title>
+<title>Hazard Globe</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css">
 <style>
 :root{
-  --bg:#05070d; --panel:rgba(12,17,28,.86); --line:rgba(255,255,255,.1);
+  --bg:#05070d; --panel:rgba(12,17,28,.88); --line:rgba(255,255,255,.1); --soft:rgba(255,255,255,.05);
   --text:#e8edf5; --muted:#8e9bb0; --accent:#5ebaff;
   --TD:#5ebaff; --TS:#00d9d2; --C1:#ffe066; --C2:#ffc233; --C3:#ff9a1f; --C4:#ff5f2e; --C5:#e0245e;
+  --shallow:#ff4d4d; --inter:#ffb000; --deep:#4da3ff;
+  --constructive:#3ddc97; --destructive:#ff5c5c; --collision:#c77dff; --conservative:#ffd166;
   --font: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
 #map{position:absolute;inset:0}
-.panel{position:absolute;background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px}
-#side{position:absolute;top:16px;left:16px;bottom:16px;width:320px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
-#side>*{pointer-events:auto;position:relative}
+.panel{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px}
+#card,#controls,#legend,#banner,#player{position:absolute}
+#side{position:absolute;top:16px;left:16px;bottom:16px;width:330px;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+#side>*{pointer-events:auto}
 header.panel{padding:14px 16px;flex:none}
 h1{margin:0;font-size:19px;letter-spacing:.2px}
 h1 span{color:var(--accent)}
-.sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.4}
-.stats{display:flex;gap:8px;margin-top:12px}
-.stat{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:8px}
-.stat b{display:block;font-size:20px}
-.stat small{color:var(--muted);font-size:11px}
+.sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.45}
+.tabs{display:flex;gap:4px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:3px;margin-top:12px}
+.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:7px 6px;border-radius:7px;cursor:pointer}
+.tabs button.on{background:rgba(94,186,255,.18);color:var(--text)}
+.stats{display:flex;gap:8px;margin-top:10px}
+.stat{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:7px 8px}
+.stat b{display:block;font-size:19px}
+.stat small{color:var(--muted);font-size:11px;line-height:1.2;display:block}
+#updated{color:var(--muted);font-size:11.5px;margin-top:8px}
 #list{flex:1 1 auto;min-height:0;overflow:auto;padding:6px}
-.storm{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer}
-.storm:hover,.storm.active{background:rgba(255,255,255,.07)}
+#list .tabs{margin:2px 4px 6px}
+.group{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:12px 10px 4px}
+.item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer}
+.item:hover,.item.active{background:rgba(255,255,255,.07)}
 .badge{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:#10131a}
-.storm .nm{font-weight:600}
-.storm .meta{color:var(--muted);font-size:12px}
+.badge.tri{border-radius:8px;clip-path:polygon(50% 6%,96% 94%,4% 94%);padding-top:10px;font-size:11px}
+.item .nm{font-weight:600;font-size:14px}
+.item .meta{color:var(--muted);font-size:12px}
 .empty{padding:14px;color:var(--muted);font-size:13px;line-height:1.5}
-#card{top:16px;right:16px;width:340px;padding:16px;display:none;max-height:calc(100% - 150px);overflow:auto}
+#card{top:16px;right:16px;width:350px;padding:16px;display:none;max-height:calc(100% - 32px);overflow:auto}
 #card.show{display:block}
-#card h2{margin:0 0 2px;font-size:22px}
+#card h2{margin:0 0 2px;font-size:22px;padding-right:56px}
 #card .close{position:absolute;top:10px;right:12px;background:none;border:0;color:var(--muted);font-size:22px;cursor:pointer}
+#card .badge{position:absolute;top:14px;right:40px}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-.kv div{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:10px;padding:8px}
+.kv div{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px}
 .kv small{display:block;color:var(--muted);font-size:11px}
 .kv b{font-size:15px}
 .teach{border-left:3px solid var(--accent);padding:6px 10px;margin:10px 0;font-size:13.5px;line-height:1.5;background:rgba(94,186,255,.07);border-radius:0 8px 8px 0}
+.facts{margin:10px 0;padding-left:18px;font-size:13.5px;line-height:1.5}
+.facts li{margin:3px 0}
 .q{font-size:13px;color:var(--muted);line-height:1.5}
+.q ol{padding-left:18px;margin:6px 0}
 .q li{margin:4px 0}
+.src{color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--soft);border:1px solid var(--line);margin-right:4px}
 a{color:var(--accent)}
-#controls{right:16px;bottom:16px;padding:10px 12px;font-size:13px}
+#controls{right:16px;bottom:40px;padding:10px 12px;font-size:13px;max-height:calc(100% - 56px);overflow:auto;z-index:4}
+#controls summary{cursor:pointer;font-weight:600;list-style:none;padding:2px 18px 2px 2px;position:relative}
+#controls summary::after{content:'▴';position:absolute;right:0;color:var(--muted)}
+#controls[open] summary{margin-bottom:6px}
+#controls[open] summary::after{content:'▾'}
 #controls label{display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;white-space:nowrap}
+#controls .sep{border-top:1px solid var(--line);margin:6px 0}
 #controls button{margin-top:6px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--line);background:rgba(94,186,255,.15);color:var(--text);font:inherit;cursor:pointer}
-#legend{left:352px;bottom:16px;padding:8px 12px;display:flex;gap:10px;align-items:center;font-size:12px;flex-wrap:wrap}
-#legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px}
-#sstkey{display:none;align-items:center;gap:6px;width:100%;color:var(--muted)}
-#sstkey .bar{height:8px;flex:1;border-radius:4px;background:linear-gradient(90deg,#2b1a6b,#1e58c9,#15b3c6,#6fe07a,#f4e53a,#f28a1c,#c81d1d)}
-#banner{left:50%;top:16px;transform:translateX(-50%);padding:10px 14px;font-size:13px;display:none;max-width:460px}
+#controls .livehide{display:none}
+body.cases #controls .liveonly{display:none}
+#legend{left:362px;bottom:16px;padding:8px 12px;font-size:12px;max-width:calc(100% - 590px)}
+#legend .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:2px 0}
+#legend .row b{color:var(--muted);font-weight:600;min-width:72px}
+#legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+#legend i.ln{width:16px;height:3px;border-radius:2px;vertical-align:2px}
+#player{left:50%;transform:translateX(-50%);bottom:16px;padding:10px 14px;display:none;align-items:center;gap:12px;width:min(560px,calc(100% - 32px))}
+#player.show{display:flex}
+body.cases.playing #legend{display:none}
+#player button{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);color:#07111e;font-size:16px;cursor:pointer}
+#player input[type=range]{flex:1;accent-color:var(--accent)}
+#player .t{min-width:150px;font-size:12.5px;line-height:1.3}
+#player .t small{color:var(--muted)}
+#player select{background:var(--soft);color:var(--text);border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px;padding:3px}
+#banner{left:50%;top:16px;transform:translateX(-50%);padding:10px 14px;font-size:13px;display:none;max-width:460px;z-index:5}
 #banner.show{display:block}
-#updated{color:var(--muted);font-size:11.5px;margin-top:8px}
 .maplibregl-ctrl-attrib{background:rgba(0,0,0,.5)!important;color:#aaa}
 .maplibregl-ctrl-attrib a{color:#ccc}
-/* Classroom mode: bigger text, fewer panels */
-body.classroom #list,body.classroom #legend{display:none}
+body.classroom #list,body.classroom #legend,body.classroom #side .stats{display:none}
 body.classroom #side{width:auto;bottom:auto}
 body.classroom h1{font-size:30px}
-body.classroom #card{width:460px;font-size:18px}
-body.classroom #card h2{font-size:34px}
-body.classroom .teach{font-size:18px}
+body.classroom #card{width:470px;font-size:18px}
+body.classroom #card h2{font-size:32px}
+body.classroom .teach,body.classroom .facts{font-size:18px}
 body.classroom .kv b{font-size:22px}
+@media (max-width:1100px){ #legend{display:none} }
 @media (max-width:760px){
   #side{right:16px;width:auto}
   #side .stats{display:none}
-  #list{flex:0 0 30%;margin-top:auto}
-  #legend{display:none}
-  #controls{bottom:calc(30% + 28px)}
-  #card{left:16px;right:16px;width:auto;top:auto;bottom:16px;max-height:55%}
+  #list{flex:0 0 32%;margin-top:auto}
+  #controls{bottom:auto;top:16px;right:16px}
+  #side header{margin-top:44px}
+  body.carded #list{display:none}
+  #card{left:16px;right:16px;width:auto;top:auto;bottom:16px;max-height:45%;z-index:3}
+  body.carded #player{bottom:calc(45% + 28px)}
+  #player{bottom:calc(32% + 28px)}
 }
 </style>
 </head>
@@ -79,69 +113,105 @@ body.classroom .kv b{font-size:22px}
 <div id="map"></div>
 
 <aside id="side">
-<header class="panel">
-  <h1>Storm <span>Globe</span></h1>
-  <div class="sub">Tropical storms happening around the world right now. Refreshes every 30 minutes.</div>
-  <div class="stats">
-    <div class="stat"><b id="sCount">–</b><small>active storms</small></div>
-    <div class="stat"><b id="sMajor">–</b><small>Cat 3 or above</small></div>
-    <div class="stat"><b id="sBasins">–</b><small>ocean basins</small></div>
-  </div>
-  <div id="updated"></div>
-</header>
-
-<div id="list" class="panel"><div class="empty">Loading storms…</div></div>
+  <header class="panel">
+    <h1>Hazard <span>Globe</span></h1>
+    <div class="sub" id="subtitle">Tropical storms and earthquakes happening around the world right now.</div>
+    <div class="tabs" role="tablist">
+      <button id="mLive" class="on" role="tab">Live now</button>
+      <button id="mCases" role="tab">Case studies</button>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat"><b id="sStorms">–</b><small>active tropical storms</small></div>
+      <div class="stat"><b id="sQuakes">–</b><small>earthquakes M4.5+ this week</small></div>
+      <div class="stat"><b id="sBig">–</b><small>largest this week</small></div>
+    </div>
+    <div id="updated"></div>
+  </header>
+  <div id="list" class="panel"><div class="empty">Loading…</div></div>
 </aside>
 
 <div id="card" class="panel"></div>
-
 <div id="banner" class="panel"></div>
 
-<div id="legend" class="panel">
-  <span><i style="background:var(--TD)"></i>Depression</span>
-  <span><i style="background:var(--TS)"></i>Storm</span>
-  <span><i style="background:var(--C1)"></i>Cat 1</span>
-  <span><i style="background:var(--C2)"></i>2</span>
-  <span><i style="background:var(--C3)"></i>3</span>
-  <span><i style="background:var(--C4)"></i>4</span>
-  <span><i style="background:var(--C5)"></i>5</span>
-  <span style="color:var(--muted)">Track: solid = past, dashed = forecast</span>
-  <div id="sstkey">Sea temp <span>cooler</span><span class="bar"></span><span>warmer</span></div>
+<div id="player" class="panel">
+  <button id="pPlay" aria-label="Play">▶</button>
+  <input id="pSlider" type="range" min="0" max="1000" value="0" aria-label="Timeline">
+  <div class="t" id="pTime"></div>
+  <select id="pSpeed" aria-label="Speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
 </div>
 
-<div id="controls" class="panel">
-  <label><input type="checkbox" id="tCone" checked> Forecast cones</label>
+<div id="legend" class="panel"></div>
+
+<details id="controls" class="panel">
+  <summary>Layers</summary>
+  <label class="liveonly"><input type="checkbox" id="tStorms" checked> Tropical storms</label>
+  <label class="liveonly"><input type="checkbox" id="tQuakes" checked> Earthquakes</label>
+  <label class="liveonly"><input type="checkbox" id="tCone" checked> Forecast cones</label>
+  <label><input type="checkbox" id="tPlates" checked> Plate boundaries</label>
+  <div class="sep"></div>
   <label><input type="checkbox" id="tNight" checked> Day and night</label>
   <label><input type="checkbox" id="tLines" checked> Tropics and 5° lines</label>
   <label><input type="checkbox" id="tSst"> Sea surface temperature</label>
   <label><input type="checkbox" id="tSat"> Satellite (yesterday)</label>
   <label><input type="checkbox" id="tSpin" checked> Spin the globe</label>
   <button id="bClass">Classroom mode</button>
-</div>
+</details>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script type="module">
-import { loadStorms } from './lib/gdacs.js';
-/*__INLINE_GDACS__*/
+import { loadStorms, category } from './lib/gdacs.js';
 
+// ================= Constants and helpers =================
 const COLORS = { TD:'#5ebaff', TS:'#00d9d2', C1:'#ffe066', C2:'#ffc233', C3:'#ff9a1f', C4:'#ff5f2e', C5:'#e0245e' };
+const DEPTH = { shallow:'#ff4d4d', inter:'#ffb000', deep:'#4da3ff' };
+const PLATE = { constructive:'#3ddc97', destructive:'#ff5c5c', collision:'#c77dff', conservative:'#ffd166' };
+const PLATE_TEXT = {
+  constructive: 'Constructive: plates move apart and magma rises to fill the gap',
+  destructive: 'Destructive: an oceanic plate sinks (subducts) under another plate',
+  collision: 'Collision: two continental plates push together and form fold mountains',
+  conservative: 'Conservative: plates slide past each other',
+};
 const STAGE_COLOR = ['match',['get','stage'],'TD',COLORS.TD,'TS',COLORS.TS,'HU',COLORS.C3,'#cccccc'];
 const GIBS = 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best';
+const USGS_FEED = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson';
 const dayStr = (daysAgo) => new Date(Date.now() - daysAgo * 864e5).toISOString().slice(0, 10);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FC = (features = []) => ({ type: 'FeatureCollection', features });
+const pt = (lon, lat, properties = {}) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lon, lat] }, properties });
+const latStr = (lat) => `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'}`;
+const lonStr = (lon) => `${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
+const fmtDate = (s, withYear) => s ? new Date(/Z|[+-]\d\d:?\d\d$/.test(s) ? s : s + 'Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) }) : '–';
+const fmtDateTime = (ms) => new Date(ms).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const depthClass = (d) => d < 70 ? 'shallow' : d < 300 ? 'inter' : 'deep';
+const DEPTH_LABEL = { shallow: 'Shallow (0–70 km)', inter: 'Intermediate (70–300 km)', deep: 'Deep (300 km+)' };
+function ago(ms) {
+  const m = Math.round((Date.now() - ms) / 6e4);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  return h < 48 ? `${h} h ago` : `${Math.round(h / 24)} days ago`;
+}
+function distKm(a, b) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (b[1] - a[1]) * r, dLon = (b[0] - a[0]) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
 
-let storms = [];
-let selected = null;
+// ================= State =================
+const state = {
+  mode: 'live', liveTab: 'storms',
+  storms: [], quakes: [], plates: null, cases: null,
+  selected: null,          // { kind: 'storm'|'quake', id }
+  caseSel: null,           // case study object with .kind
+  play: { on: false, t: 0, speed: 1 },
+};
 
-// ---------- Map ----------
+// ================= Map =================
 const map = new maplibregl.Map({
-  container: 'map',
-  center: [-40, 20],
-  zoom: 1.6,
-  minZoom: 0.8,
-  maxZoom: 8,
+  container: 'map', center: [-40, 20], zoom: 1.6, minZoom: 0.8, maxZoom: 9,
   attributionControl: { compact: true },
   style: {
     version: 8,
@@ -151,7 +221,7 @@ const map = new maplibregl.Map({
     sources: {
       earth: { type: 'raster', tileSize: 256, maxzoom: 8,
         tiles: [`${GIBS}/BlueMarble_ShadedRelief_Bathymetry/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg`],
-        attribution: 'Imagery: NASA GIBS · Storms: <a href="https://www.gdacs.org" target="_blank">GDACS</a>' },
+        attribution: 'Imagery: NASA GIBS · Storms: <a href="https://www.gdacs.org" target="_blank">GDACS</a>, <a href="https://www.ncei.noaa.gov/products/international-best-track-archive" target="_blank">IBTrACS</a> · Earthquakes: <a href="https://earthquake.usgs.gov" target="_blank">USGS</a> · Plates: Bird (2003)' },
       sat: { type: 'raster', tileSize: 256, maxzoom: 9,
         tiles: [`${GIBS}/MODIS_Terra_CorrectedReflectance_TrueColor/default/${dayStr(1)}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`] },
       sst: { type: 'raster', tileSize: 256, maxzoom: 7,
@@ -167,7 +237,7 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 
-// Cyclone symbol drawn on a canvas (two spiral arms round an eye)
+// ----- Icons drawn on canvas -----
 function cycloneIcon(color, southern) {
   const s = 64, c = document.createElement('canvas');
   c.width = c.height = s;
@@ -178,11 +248,8 @@ function cycloneIcon(color, southern) {
   g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 4;
   for (const rot of [0, Math.PI]) {
     g.save(); g.rotate(rot);
-    g.beginPath(); g.lineWidth = 6;
-    g.arc(0, 0, 13, Math.PI * 0.05, Math.PI * 0.95);
-    g.stroke();
-    g.beginPath(); g.lineWidth = 5;
-    g.moveTo(-13, 2); g.quadraticCurveTo(-16, 20, -2, 27); g.stroke();
+    g.beginPath(); g.lineWidth = 6; g.arc(0, 0, 13, Math.PI * 0.05, Math.PI * 0.95); g.stroke();
+    g.beginPath(); g.lineWidth = 5; g.moveTo(-13, 2); g.quadraticCurveTo(-16, 20, -2, 27); g.stroke();
     g.restore();
   }
   g.beginPath(); g.arc(0, 0, 7, 0, Math.PI * 2); g.fill();
@@ -190,8 +257,21 @@ function cycloneIcon(color, southern) {
   g.beginPath(); g.arc(0, 0, 3.5, 0, Math.PI * 2); g.fill();
   return g.getImageData(0, 0, s, s);
 }
+function volcanoIcon() {
+  const s = 64, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  g.shadowColor = 'rgba(0,0,0,.7)'; g.shadowBlur = 5;
+  g.fillStyle = '#6b4a3a';
+  g.beginPath(); g.moveTo(8, 56); g.lineTo(26, 20); g.lineTo(38, 20); g.lineTo(56, 56); g.closePath(); g.fill();
+  g.fillStyle = '#ff5a1f';
+  g.beginPath(); g.moveTo(26, 20); g.lineTo(38, 20); g.lineTo(35, 30); g.lineTo(32, 26); g.lineTo(29, 31); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(200,200,200,.85)';
+  for (const [x, y, r] of [[30, 12, 6], [38, 8, 5], [24, 7, 4]]) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
+  return g.getImageData(0, 0, s, s);
+}
 
-// ---------- Sun and night ----------
+// ----- Sun, night and reference lines -----
 function sunPosition(date) {
   const d = (date - Date.UTC(2000, 0, 1, 12)) / 864e5;
   const g = (357.529 + 0.98560028 * d) * Math.PI / 180;
@@ -214,73 +294,80 @@ function nightGeoJSON(now = new Date()) {
     const lat = Math.atan(-Math.cos(ha) / Math.tan(dec)) * 180 / Math.PI;
     ring.push([lon, Math.max(-84.9, Math.min(84.9, lat))]); // stay inside the pole cap so the ring never crosses itself
   }
-  const pole = dec > 0 ? -85 : 85; // night side contains the pole away from the sun
+  const pole = dec > 0 ? -85 : 85;
   ring.push([180, pole], [-180, pole], ring[0]);
-  return {
-    type: 'FeatureCollection',
-    features: [
-      { type: 'Feature', properties: { kind: 'night' }, geometry: { type: 'Polygon', coordinates: [ring] } },
-      { type: 'Feature', properties: { kind: 'sun', label: 'Sun overhead' }, geometry: { type: 'Point', coordinates: [sun.lon, sun.lat] } },
-    ],
-  };
+  return FC([
+    { type: 'Feature', properties: { kind: 'night' }, geometry: { type: 'Polygon', coordinates: [ring] } },
+    pt(sun.lon, sun.lat, { kind: 'sun' }),
+  ]);
 }
-
 function refLines() {
   const line = (lat, label, kind) => ({ type: 'Feature', properties: { label, kind },
     geometry: { type: 'LineString', coordinates: Array.from({ length: 73 }, (_, i) => [-180 + i * 5, lat]) } });
-  return { type: 'FeatureCollection', features: [
+  return FC([
     line(0, 'Equator', 'eq'),
     line(23.44, 'Tropic of Cancer', 'tropic'), line(-23.44, 'Tropic of Capricorn', 'tropic'),
     line(5, '5°N: too little Coriolis force for storms', 'five'), line(-5, '5°S', 'five'),
-  ] };
+  ]);
 }
-
-const BASIN_LABELS = { type: 'FeatureCollection', features: [
+const BASIN_LABELS = FC([
   ['North Atlantic · hurricanes', -45, 28], ['East Pacific · hurricanes', -120, 13],
   ['North-West Pacific · typhoons', 145, 22], ['North Indian · cyclones', 75, 12],
   ['South-West Indian · cyclones', 60, -16], ['Australian region · cyclones', 115, -14],
   ['South Pacific · cyclones', -170, -16],
-].map(([label, x, y]) => ({ type: 'Feature', properties: { label }, geometry: { type: 'Point', coordinates: [x, y] } })) };
+].map(([label, x, y]) => pt(x, y, { label })));
+
+// ================= Layer groups =================
+const LIVE_STORM_LAYERS = ['cones', 'cones-edge', 'tracks', 'tracks-fc', 'points', 'storm-glow', 'storms'];
+const LIVE_QUAKE_LAYERS = ['quakes', 'quakes-sel'];
+const CASE_LAYERS = ['cs-track', 'cs-trail', 'cs-landfall', 'cs-quakes', 'cs-ring', 'cs-main', 'cs-storm', 'cs-volc', 'cs-label'];
+const vis = (ids, on) => ids.forEach((id) => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
 
 map.on('load', async () => {
   for (const [code, col] of Object.entries(COLORS)) {
     map.addImage(`cy-${code}-n`, cycloneIcon(col, false), { pixelRatio: 2 });
     map.addImage(`cy-${code}-s`, cycloneIcon(col, true), { pixelRatio: 2 });
   }
+  map.addImage('volcano', volcanoIcon(), { pixelRatio: 2 });
 
+  // Night
   map.addSource('night', { type: 'geojson', data: nightGeoJSON() });
   map.addLayer({ id: 'night', type: 'fill', source: 'night', filter: ['==', ['get', 'kind'], 'night'],
     paint: { 'fill-color': '#000814', 'fill-opacity': 0.62, 'fill-antialias': false } });
   map.addLayer({ id: 'sun', type: 'circle', source: 'night', filter: ['==', ['get', 'kind'], 'sun'],
     paint: { 'circle-radius': 6, 'circle-color': '#ffd24d', 'circle-blur': 0.4, 'circle-stroke-color': 'rgba(255,210,77,.35)', 'circle-stroke-width': 6 } });
 
-  // Country borders
+  // Borders
   try {
     const topo = await (await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json')).json();
     map.addSource('borders', { type: 'geojson', data: topojson.mesh(topo, topo.objects.countries) });
     map.addLayer({ id: 'borders', type: 'line', source: 'borders', paint: { 'line-color': 'rgba(255,255,255,.28)', 'line-width': 0.6 } });
   } catch (e) { console.warn('Borders not loaded', e); }
 
+  // Plate boundaries
+  map.addSource('plates', { type: 'geojson', data: FC() });
+  map.addLayer({ id: 'plates', type: 'line', source: 'plates', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
+    'line-color': ['match', ['get', 'type'], 'constructive', PLATE.constructive, 'destructive', PLATE.destructive, 'collision', PLATE.collision, PLATE.conservative],
+    'line-width': ['interpolate', ['linear'], ['zoom'], 1, 1.4, 6, 3], 'line-opacity': 0.85 } });
+
+  // Reference lines
   map.addSource('ref', { type: 'geojson', data: refLines() });
   map.addLayer({ id: 'ref', type: 'line', source: 'ref', filter: ['==', ['get', 'kind'], 'eq'],
     paint: { 'line-color': '#ffffff', 'line-opacity': 0.5, 'line-width': 1 } });
   map.addLayer({ id: 'ref-dash', type: 'line', source: 'ref', filter: ['!=', ['get', 'kind'], 'eq'], paint: {
-    'line-color': ['match', ['get', 'kind'], 'five', '#ff8fa3', '#ffd24d'],
-    'line-opacity': 0.55, 'line-width': 1, 'line-dasharray': [4, 3] } });
+    'line-color': ['match', ['get', 'kind'], 'five', '#ff8fa3', '#ffd24d'], 'line-opacity': 0.55, 'line-width': 1, 'line-dasharray': [4, 3] } });
   map.addLayer({ id: 'ref-label', type: 'symbol', source: 'ref', layout: {
     'symbol-placement': 'line', 'symbol-spacing': 600, 'text-field': ['get', 'label'], 'text-size': 11,
     'text-font': ['Open Sans Semibold'], 'text-offset': [0, -0.7] },
     paint: { 'text-color': ['match', ['get', 'kind'], 'five', '#ffb3c1', 'eq', '#ffffff', '#ffe08a'], 'text-halo-color': '#000', 'text-halo-width': 1.2 } });
-
   map.addSource('basins', { type: 'geojson', data: BASIN_LABELS });
   map.addLayer({ id: 'basins', type: 'symbol', source: 'basins', maxzoom: 4, layout: {
     'text-field': ['get', 'label'], 'text-size': 12, 'text-font': ['Open Sans Semibold'], 'text-letter-spacing': 0.08,
     'text-transform': 'uppercase', 'text-max-width': 12 },
     paint: { 'text-color': 'rgba(190,215,255,.55)', 'text-halo-color': 'rgba(0,0,0,.6)', 'text-halo-width': 1 } });
 
-  const empty = { type: 'FeatureCollection', features: [] };
-  for (const id of ['cones', 'tracks', 'points', 'storms']) map.addSource(id, { type: 'geojson', data: empty });
-
+  // ---- Live: storms ----
+  for (const id of ['cones', 'tracks', 'points', 'storms', 'quakes']) map.addSource(id, { type: 'geojson', data: FC() });
   map.addLayer({ id: 'cones', type: 'fill', source: 'cones', paint: { 'fill-color': '#ffffff', 'fill-opacity': ['case', ['get', 'sel'], 0.22, 0.1] } });
   map.addLayer({ id: 'cones-edge', type: 'line', source: 'cones', paint: { 'line-color': '#ffffff', 'line-opacity': 0.4, 'line-width': 0.8 } });
   map.addLayer({ id: 'tracks', type: 'line', source: 'tracks', filter: ['!', ['get', 'forecast']],
@@ -290,6 +377,17 @@ map.on('load', async () => {
   map.addLayer({ id: 'points', type: 'circle', source: 'points', minzoom: 2.5, paint: {
     'circle-radius': 2.6, 'circle-color': ['case', ['get', 'forecast'], 'rgba(255,255,255,0)', '#ffffff'],
     'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1 } });
+
+  // ---- Live: earthquakes ----
+  const quakeRadius = ['interpolate', ['exponential', 1.6], ['get', 'mag'], 4.5, 3, 6, 7, 7, 13, 8, 22];
+  map.addLayer({ id: 'quakes', type: 'circle', source: 'quakes', paint: {
+    'circle-radius': quakeRadius,
+    'circle-color': ['match', ['get', 'dc'], 'shallow', DEPTH.shallow, 'inter', DEPTH.inter, DEPTH.deep],
+    'circle-opacity': ['interpolate', ['linear'], ['get', 'ageH'], 0, 0.95, 168, 0.45],
+    'circle-stroke-color': '#000', 'circle-stroke-width': 0.6, 'circle-stroke-opacity': 0.6 } });
+  map.addLayer({ id: 'quakes-sel', type: 'circle', source: 'quakes', filter: ['get', 'sel'], paint: {
+    'circle-radius': ['+', quakeRadius, 5], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2 } });
+
   map.addLayer({ id: 'storm-glow', type: 'circle', source: 'storms', paint: {
     'circle-radius': ['interpolate', ['linear'], ['zoom'], 1, 16, 6, 30], 'circle-color': ['get', 'color'], 'circle-opacity': 0.18, 'circle-blur': 0.6 } });
   map.addLayer({ id: 'storms', type: 'symbol', source: 'storms', layout: {
@@ -299,117 +397,453 @@ map.on('load', async () => {
     'text-offset': [0, 1.9], 'text-anchor': 'top', 'text-optional': true },
     paint: { 'text-color': '#ffffff', 'text-halo-color': '#000', 'text-halo-width': 1.5 } });
 
-  map.on('click', 'storms', (e) => select(e.features[0].properties.id, true));
-  map.on('mouseenter', 'storms', () => (map.getCanvas().style.cursor = 'pointer'));
-  map.on('mouseleave', 'storms', () => (map.getCanvas().style.cursor = ''));
+  // ---- Case studies ----
+  for (const id of ['cs-track', 'cs-trail', 'cs-points', 'cs-quakes', 'cs-main', 'cs-marker']) map.addSource(id, { type: 'geojson', data: FC() });
+  map.addLayer({ id: 'cs-track', type: 'line', source: 'cs-track', paint: { 'line-color': '#ffffff', 'line-opacity': 0.25, 'line-width': 1.5, 'line-dasharray': [2, 2] } });
+  map.addLayer({ id: 'cs-trail', type: 'line', source: 'cs-trail', layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': ['get', 'color'], 'line-width': ['interpolate', ['linear'], ['zoom'], 1, 3, 6, 6] } });
+  map.addLayer({ id: 'cs-landfall', type: 'circle', source: 'cs-points', paint: {
+    'circle-radius': 5, 'circle-color': '#ffffff', 'circle-stroke-color': '#000', 'circle-stroke-width': 1.5 } });
+  map.addLayer({ id: 'cs-quakes', type: 'circle', source: 'cs-quakes', paint: {
+    'circle-radius': ['interpolate', ['exponential', 1.6], ['get', 'mag'], 3.5, 2, 4.5, 3, 6, 7, 7, 12, 8, 20],
+    'circle-color': ['match', ['get', 'dc'], 'shallow', DEPTH.shallow, 'inter', DEPTH.inter, DEPTH.deep],
+    'circle-opacity': ['interpolate', ['linear'], ['get', 'fresh'], 0, 0.55, 1, 1],
+    'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['*', ['get', 'fresh'], 2] } });
+  map.addLayer({ id: 'cs-ring', type: 'circle', source: 'cs-main', filter: ['==', ['get', 'kind'], 'ring'], paint: {
+    'circle-radius': ['get', 'r'], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#ffffff',
+    'circle-stroke-width': 2, 'circle-stroke-opacity': ['get', 'o'], 'circle-pitch-alignment': 'map' } });
+  map.addLayer({ id: 'cs-main', type: 'circle', source: 'cs-main', filter: ['==', ['get', 'kind'], 'main'], paint: {
+    'circle-radius': ['interpolate', ['exponential', 1.6], ['get', 'mag'], 6, 9, 9, 24], 'circle-color': DEPTH.shallow,
+    'circle-stroke-color': '#ffffff', 'circle-stroke-width': 3 } });
+  map.addLayer({ id: 'cs-storm', type: 'symbol', source: 'cs-marker', filter: ['==', ['get', 'kind'], 'storm'], layout: {
+    'icon-image': ['get', 'icon'], 'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.9, 6, 1.6],
+    'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-rotate': 0 } });
+  map.addLayer({ id: 'cs-volc', type: 'symbol', source: 'cs-marker', filter: ['==', ['get', 'kind'], 'volcano'], layout: {
+    'icon-image': 'volcano', 'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.9, 6, 1.5], 'icon-allow-overlap': true, 'icon-anchor': 'bottom' } });
+  map.addLayer({ id: 'cs-label', type: 'symbol', source: 'cs-marker', layout: {
+    'text-field': ['get', 'label'], 'text-font': ['Open Sans Semibold'], 'text-size': 13, 'text-offset': [0, 1.6], 'text-anchor': 'top',
+    'text-allow-overlap': true },
+    paint: { 'text-color': '#ffffff', 'text-halo-color': '#000', 'text-halo-width': 1.5 } });
+  vis(CASE_LAYERS, false);
+
+  // Interactions
+  map.on('click', 'storms', (e) => selectLive('storm', e.features[0].properties.id, true));
+  map.on('click', 'quakes', (e) => selectLive('quake', e.features[0].properties.id, false));
+  for (const l of ['storms', 'quakes']) {
+    map.on('mouseenter', l, () => (map.getCanvas().style.cursor = 'pointer'));
+    map.on('mouseleave', l, () => (map.getCanvas().style.cursor = ''));
+  }
 
   setInterval(() => map.getSource('night').setData(nightGeoJSON()), 60e3);
   animate();
-  refresh();
-  setInterval(refresh, 30 * 60e3);
+  loadStatic();
+  refreshStorms();
+  refreshQuakes();
+  setInterval(refreshStorms, 30 * 60e3);
+  setInterval(refreshQuakes, 5 * 60e3);
+  renderLegend();
 });
 
-// ---------- Data ----------
+// ================= Data loading =================
+async function loadStatic() {
+  try {
+    state.plates = await (await fetch('./data/plates.json')).json();
+    map.getSource('plates').setData(state.plates);
+  } catch (e) { console.warn('Plates not loaded', e); }
+  try {
+    state.cases = await (await fetch('./data/casestudies.json')).json();
+    if (state.mode === 'cases') renderList();
+  } catch (e) { console.warn('Case studies not loaded', e); }
+}
+
 async function fetchStorms() {
   const api = new URLSearchParams(location.search).get('api') || './api/storms';
   try {
     const r = await fetch(api, { cache: 'no-store' });
     if (r.ok) return await r.json();
   } catch (e) { /* fall through */ }
-  return await loadStorms(); // works when the page can reach GDACS directly
+  return await loadStorms();
 }
 
-async function refresh() {
+async function refreshStorms() {
   try {
     const data = await fetchStorms();
-    storms = data.storms || [];
+    state.storms = data.storms || [];
+    $('updated').textContent = `Updated ${new Date(data.generated).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} · GDACS and USGS`;
     $('banner').classList.remove('show');
-    $('updated').textContent = `Updated ${new Date(data.generated).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })} · source: GDACS`;
-    render();
   } catch (e) {
     console.error(e);
-    $('banner').innerHTML = '<b>Couldn’t load live storm data.</b> This page needs its small data service (<code>/api/storms</code>), so it has to be run from Vercel rather than opened as a file.';
+    $('banner').innerHTML = '<b>Couldn’t load live storm data.</b> Storms need the small data service at <code>/api/storms</code>, so run the site from Vercel rather than opening the file. Earthquakes and case studies still work.';
     $('banner').classList.add('show');
-    $('list').innerHTML = '<div class="empty">No data yet.</div>';
+    setTimeout(() => $('banner').classList.remove('show'), 9000);
+  }
+  renderLive();
+}
+
+async function refreshQuakes() {
+  try {
+    const r = await fetch(USGS_FEED, { cache: 'no-store' });
+    const data = await r.json();
+    state.quakes = data.features.map((f) => ({
+      id: f.id, mag: Math.round(f.properties.mag * 10) / 10, place: f.properties.place || 'Unknown location',
+      time: f.properties.time, lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1],
+      depth: Math.round(f.geometry.coordinates[2]), tsunami: f.properties.tsunami, url: f.properties.url,
+      felt: f.properties.felt, alert: f.properties.alert,
+    })).sort((a, b) => b.mag - a.mag);
+  } catch (e) { console.error('USGS feed failed', e); }
+  renderLive();
+}
+
+// ================= Live rendering =================
+function renderLive() {
+  if (!map.getSource('storms')) return;
+  const sel = state.selected;
+  const isSel = (kind, id) => !!(sel && sel.kind === kind && sel.id === id);
+  const S = state.storms;
+  map.getSource('storms').setData(FC(S.map((s) => pt(s.lon, s.lat, {
+    id: s.id, name: s.name, color: COLORS[s.category.code], icon: `cy-${s.category.code}-${s.lat >= 0 ? 'n' : 's'}`, spin: s.lat >= 0 ? -1 : 1 }))));
+  map.getSource('tracks').setData(FC(S.flatMap((s) => (s.track || []).map((t) => ({
+    type: 'Feature', geometry: { type: 'LineString', coordinates: t.coords }, properties: { stage: t.stage, forecast: t.forecast, sel: isSel('storm', s.id) } })))));
+  map.getSource('points').setData(FC(S.flatMap((s) => (s.points || []).map((p) => pt(p.c[0], p.c[1], { forecast: p.forecast })))));
+  map.getSource('cones').setData(FC(S.filter((s) => s.cone).map((s) => ({ type: 'Feature', geometry: s.cone, properties: { sel: isSel('storm', s.id) } }))));
+  const now = Date.now();
+  map.getSource('quakes').setData(FC([...state.quakes].reverse().map((q) => pt(q.lon, q.lat, {
+    id: q.id, mag: q.mag, dc: depthClass(q.depth), ageH: (now - q.time) / 36e5, sel: isSel('quake', q.id) }))));
+
+  $('sStorms').textContent = S.length;
+  $('sQuakes').textContent = state.quakes.length || '–';
+  $('sBig').textContent = state.quakes[0] ? 'M' + state.quakes[0].mag.toFixed(1) : '–';
+  if (state.mode === 'live') renderList();
+  if (sel && state.mode === 'live') showLiveCard();
+}
+
+function renderList() {
+  const list = $('list');
+  if (state.mode === 'cases') { renderCaseList(); return; }
+  const t = state.liveTab;
+  let html = `<div class="tabs"><button data-tab="storms" class="${t === 'storms' ? 'on' : ''}">Storms (${state.storms.length})</button><button data-tab="quakes" class="${t === 'quakes' ? 'on' : ''}">Earthquakes (${state.quakes.length})</button></div>`;
+  const sel = state.selected;
+  if (t === 'storms') {
+    html += state.storms.length ? state.storms.map((s) => `
+      <div class="item ${sel?.id === s.id ? 'active' : ''}" data-kind="storm" data-id="${esc(s.id)}">
+        <div class="badge" style="background:${COLORS[s.category.code]}">${esc(s.category.short)}</div>
+        <div><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.basin.name)} · ${s.windKmh} km/h</div></div>
+      </div>`).join('') : '<div class="empty">No active tropical storms right now. Quiet spells are normal, especially outside each basin’s season.</div>';
+  } else {
+    html += state.quakes.length ? state.quakes.slice(0, 80).map((q) => `
+      <div class="item ${sel?.id === q.id ? 'active' : ''}" data-kind="quake" data-id="${esc(q.id)}">
+        <div class="badge" style="background:${DEPTH[depthClass(q.depth)]}">${q.mag.toFixed(1)}</div>
+        <div><div class="nm">${esc(q.place)}</div><div class="meta">${ago(q.time)} · ${q.depth} km deep</div></div>
+      </div>`).join('') : '<div class="empty">Loading earthquakes…</div>';
+  }
+  list.innerHTML = html;
+  list.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => { state.liveTab = b.dataset.tab; renderList(); });
+  list.querySelectorAll('.item').forEach((el) => el.onclick = () => selectLive(el.dataset.kind, el.dataset.id, true));
+}
+
+function selectLive(kind, id, fly) {
+  state.selected = { kind, id };
+  state.liveTab = kind === 'storm' ? 'storms' : 'quakes';
+  stopSpin();
+  renderLive();
+  const o = kind === 'storm' ? state.storms.find((s) => s.id === id) : state.quakes.find((q) => q.id === id);
+  if (o && fly) map.flyTo({ center: [o.lon, o.lat], zoom: Math.max(map.getZoom(), kind === 'storm' ? 3.4 : 3), speed: 0.8 });
+}
+
+function closeCard() {
+  document.body.classList.remove('carded');
+  state.selected = null;
+  $('card').classList.remove('show');
+  if (state.mode === 'live') renderLive(); else clearCase();
+}
+
+function nearestBoundary(lon, lat) {
+  if (!state.plates) return null;
+  let best = null;
+  for (const f of state.plates.features) {
+    for (const c of f.geometry.coordinates) {
+      if (Math.abs(c[1] - lat) > 12) continue;
+      const d = distKm([lon, lat], c);
+      if (!best || d < best.d) best = { d, type: f.properties.type };
+    }
+  }
+  return best;
+}
+
+function showLiveCard() {
+  const card = $('card');
+  const sel = state.selected;
+  if (sel.kind === 'storm') {
+    const s = state.storms.find((x) => x.id === sel.id);
+    if (!s) return card.classList.remove('show');
+    const days = Math.max(1, Math.round((Date.parse(s.to + 'Z') - Date.parse(s.from + 'Z')) / 864e5));
+    const north = s.lat >= 0, cat = s.category;
+    const catText = /C\d/.test(cat.code) ? `a <b>${cat.label}</b> ${s.basin.term}` : `a <b>${cat.label.toLowerCase()}</b>`;
+    const fc = (s.points || []).filter((p) => p.forecast);
+    const last = fc[fc.length - 1];
+    const questions = [
+      `It is at ${latStr(s.lat)}. Why do tropical storms almost never form within 5° of the Equator?`,
+      `Turn on <i>Sea surface temperature</i>. Is the ocean under it above 27°C? What happens if it moves over cooler water?`,
+      last ? `The forecast takes it to about ${latStr(last.c[1])}, ${lonStr(last.c[0])} by ${fmtDate(last.t)}. Will it strengthen or weaken there, and why?` : `What would make this storm weaken?`,
+      s.countries.length ? `It may affect ${esc(s.countries.join(', '))}. How might the impacts differ between an HIC and an LIC?` : `It is out at sea. Who might still be affected (shipping, islands, fishing)?`,
+    ];
+    card.innerHTML = `
+      <button class="close" aria-label="Close">×</button>
+      <div class="badge" style="background:${COLORS[cat.code]}">${esc(cat.short)}</div>
+      <h2>${esc(s.name)}</h2>
+      <div class="sub">${esc(s.basin.name)} · ${latStr(s.lat)}, ${lonStr(s.lon)}</div>
+      <div class="kv">
+        <div><small>Max sustained wind</small><b>${s.windKmh} km/h</b><br><small>${s.windMph} mph</small></div>
+        <div><small>Strength</small><b>${esc(cat.label)}</b></div>
+        <div><small>Active since</small><b>${fmtDate(s.from)}</b><br><small>${days} day${days > 1 ? 's' : ''}</small></div>
+        <div><small>GDACS alert</small><b>${esc(s.alert)}</b><br><small>humanitarian impact</small></div>
+      </div>
+      <div class="teach">This is ${catText}. In the ${esc(s.basin.name)}, storms like this are called <b>${s.basin.term}s</b>.</div>
+      <div class="teach">It spins <b>${north ? 'anticlockwise' : 'clockwise'}</b> because it is in the ${north ? 'Northern' : 'Southern'} Hemisphere. The Coriolis effect turns the inflowing air.</div>
+      <div class="q"><b style="color:var(--text)">Discuss</b><ol>${questions.map((q) => `<li>${q}</li>`).join('')}</ol></div>
+      <div class="src">Solid line: where it has been. Dashed line and white cone: where forecasters expect it to go. ${s.report ? `<a href="${esc(s.report)}" target="_blank" rel="noopener">Full GDACS report</a>` : ''}</div>`;
+  } else {
+    const q = state.quakes.find((x) => x.id === sel.id);
+    if (!q) return card.classList.remove('show');
+    const dc = depthClass(q.depth);
+    const nb = nearestBoundary(q.lon, q.lat);
+    const nbText = nb ? (nb.d < 250
+      ? `It is about <b>${Math.round(nb.d / 10) * 10} km</b> from a <b style="color:${PLATE[nb.type]}">${nb.type}</b> plate boundary. ${PLATE_TEXT[nb.type]}.`
+      : `It is about ${Math.round(nb.d / 50) * 50} km from the nearest plate boundary, so it is an unusual <b>intraplate</b> earthquake.`) : '';
+    const questions = [
+      dc === 'deep' || dc === 'inter'
+        ? `It happened ${q.depth} km down. Only one type of plate boundary produces earthquakes this deep. Which one, and why?`
+        : `Shallow earthquakes usually cause more damage than deep ones of the same magnitude. Why?`,
+      `Look at the other earthquakes this week. Do they form a pattern? How does it compare with the plate boundaries?`,
+      `What would the impacts of a magnitude ${q.mag.toFixed(1)} earthquake here depend on?`,
+    ];
+    card.innerHTML = `
+      <button class="close" aria-label="Close">×</button>
+      <div class="badge" style="background:${DEPTH[dc]}">${q.mag.toFixed(1)}</div>
+      <h2>Magnitude ${q.mag.toFixed(1)}</h2>
+      <div class="sub">${esc(q.place)}</div>
+      <div class="kv">
+        <div><small>When</small><b>${ago(q.time)}</b><br><small>${fmtDateTime(q.time)}</small></div>
+        <div><small>Depth</small><b>${q.depth} km</b><br><small>${DEPTH_LABEL[dc]}</small></div>
+        <div><small>Location</small><b>${latStr(q.lat)}</b><br><small>${lonStr(q.lon)}</small></div>
+        <div><small>Tsunami</small><b>${q.tsunami ? 'Alert issued' : 'None flagged'}</b><br><small>by USGS</small></div>
+      </div>
+      ${nbText ? `<div class="teach">${nbText}</div>` : ''}
+      <div class="q"><b style="color:var(--text)">Discuss</b><ol>${questions.map((x) => `<li>${x}</li>`).join('')}</ol></div>
+      <div class="src"><a href="${esc(q.url)}" target="_blank" rel="noopener">USGS event page</a> · Magnitude is logarithmic: each whole number is about 32 times more energy.</div>`;
+  }
+  card.querySelector('.close').onclick = closeCard;
+  card.classList.add('show');
+  document.body.classList.add('carded');
+}
+
+// ================= Case studies =================
+function caseBadge(c) {
+  if (c.kind === 'storm') {
+    const peak = Math.max(...c.track.map((p) => p[3] || 0));
+    const cat = category(peak * 1.852);
+    return `<div class="badge" style="background:${COLORS[cat.code]}">${esc(cat.short)}</div>`;
+  }
+  if (c.kind === 'quake') return `<div class="badge" style="background:${DEPTH.shallow}">${c.mag.toFixed(1)}</div>`;
+  return `<div class="badge tri" style="background:#ff7a3d">V</div>`;
+}
+
+function allCases() {
+  const C = state.cases;
+  if (!C) return [];
+  return [
+    ...C.storms.map((c) => ({ ...c, kind: 'storm' })),
+    ...C.earthquakes.map((c) => ({ ...c, kind: 'quake' })),
+    ...C.volcanoes.map((c) => ({ ...c, kind: 'volcano' })),
+  ];
+}
+
+function renderCaseList() {
+  const list = $('list');
+  if (!state.cases) { list.innerHTML = '<div class="empty">Loading case studies…</div>'; return; }
+  const cases = allCases();
+  const group = (kind, title) => `<div class="group">${title}</div>` + cases.filter((c) => c.kind === kind).sort((a, b) => b.year - a.year).map((c) => `
+    <div class="item ${state.caseSel?.id === c.id ? 'active' : ''}" data-id="${esc(c.id)}">
+      ${caseBadge(c)}
+      <div><div class="nm">${esc(c.name)}</div><div class="meta">${c.year} · ${esc(c.dev)}</div></div>
+    </div>`).join('');
+  list.innerHTML = group('storm', 'Tropical storms: replay the track') + group('quake', 'Earthquakes: replay the aftershocks') + group('volcano', 'Volcanoes');
+  list.querySelectorAll('.item').forEach((el) => el.onclick = () => openCase(cases.find((c) => c.id === el.dataset.id)));
+}
+
+function clearCase() {
+  state.caseSel = null;
+  pause();
+  $('player').classList.remove('show');
+  document.body.classList.remove('playing');
+  for (const id of ['cs-track', 'cs-trail', 'cs-points', 'cs-quakes', 'cs-main', 'cs-marker']) map.getSource(id)?.setData(FC());
+  renderCaseList();
+}
+
+function openCase(c) {
+  clearCase();
+  state.caseSel = c;
+  stopSpin();
+  renderCaseList();
+  if (c.kind === 'storm') {
+    const pts = c.track;
+    c._t = pts.map((p) => Date.parse(p[0] + ':00:00Z'));
+    c._span = c._t[c._t.length - 1] - c._t[0];
+    map.getSource('cs-track').setData(FC([{ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map((p) => [p[2], p[1]]) }, properties: {} }]));
+    const landfalls = pts.filter((p, i) => p[5] && !(pts[i - 1] || [])[5]);
+    map.getSource('cs-points').setData(FC(landfalls.map((p) => pt(p[2], p[1], { t: p[0] }))));
+    fitTo(pts.map((p) => [p[2], p[1]]));
+  } else if (c.kind === 'quake') {
+    c._span = Math.max(60, ...c.seq.map((s) => s[0]));
+    map.flyTo({ center: [c.lon, c.lat], zoom: c.mag >= 8.5 ? 4.2 : 5.2, speed: 0.9 });
+  } else {
+    map.getSource('cs-marker').setData(FC([pt(c.lon, c.lat, { kind: 'volcano', label: c.name })]));
+    map.flyTo({ center: [c.lon, c.lat], zoom: 5, speed: 0.9 });
+  }
+  const hasReplay = c.kind !== 'volcano';
+  $('player').classList.toggle('show', hasReplay);
+  document.body.classList.toggle('playing', hasReplay);
+  state.play.t = 0;
+  $('pSlider').value = 0;
+  drawCase();
+  showCaseCard();
+  if (hasReplay) setTimeout(play, 1200);
+}
+
+function fitTo(coords) {
+  let [minX, minY, maxX, maxY] = [180, 90, -180, -90];
+  for (const [x, y] of coords) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+  const small = window.innerWidth < 760;
+  const padding = small ? { top: 170, bottom: Math.round(window.innerHeight * 0.45), left: 30, right: 30 } : { top: 80, bottom: 120, left: 380, right: 400 };
+  try { map.fitBounds([[minX, minY], [maxX, maxY]], { padding, maxZoom: 5, duration: 1500 }); }
+  catch (e) { map.flyTo({ center: [(minX + maxX) / 2, (minY + maxY) / 2], zoom: 3 }); }
+}
+
+// Interpolated state of a storm at fraction f (0..1) of its life
+function stormAt(c, f) {
+  const T = c._t[0] + f * c._span, P = c.track;
+  let i = 0;
+  while (i < P.length - 2 && c._t[i + 1] <= T) i++;
+  const a = P[i], b = P[i + 1] || a;
+  const k = c._t[i + 1] > c._t[i] ? Math.min(1, Math.max(0, (T - c._t[i]) / (c._t[i + 1] - c._t[i]))) : 0;
+  const lerp = (x, y) => x == null ? y : y == null ? x : x + (y - x) * k;
+  return { i, time: T, lat: lerp(a[1], b[1]), lon: lerp(a[2], b[2]), kt: lerp(a[3], b[3]), pres: lerp(a[4], b[4]), land: (k < 0.5 ? a : b)[5] };
+}
+
+function drawCase() {
+  const c = state.caseSel;
+  if (!c) return;
+  const f = state.play.t;
+  if (c.kind === 'storm') {
+    const s = stormAt(c, f);
+    const P = c.track, segs = [];
+    for (let j = 0; j <= s.i && j < P.length - 1; j++) {
+      const end = j === s.i ? [s.lon, s.lat] : [P[j + 1][2], P[j + 1][1]];
+      segs.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: [[P[j][2], P[j][1]], end] },
+        properties: { color: COLORS[category((P[j][3] || 0) * 1.852).code] } });
+    }
+    map.getSource('cs-trail').setData(FC(segs));
+    const cat = category((s.kt || 0) * 1.852);
+    map.getSource('cs-marker').setData(FC([pt(s.lon, s.lat, { kind: 'storm', icon: `cy-${cat.code}-${s.lat >= 0 ? 'n' : 's'}`, spin: s.lat >= 0 ? -1 : 1, label: c.name.split(' ').pop() })]));
+    const kmh = Math.round((s.kt || 0) * 1.852);
+    $('pTime').innerHTML = `<b>${fmtDateTime(s.time).replace(' UTC', '')}</b><br><small>${cat.label} · ${kmh} km/h · ${s.land ? 'over land' : 'over sea'}</small>`;
+    const now = document.getElementById('csNow');
+    if (now) now.innerHTML = `<b style="color:${COLORS[cat.code]}">${cat.label}</b> · ${kmh} km/h (${Math.round(kmh / 1.609)} mph)${s.pres ? ` · ${Math.round(s.pres)} hPa` : ''} · ${s.land ? '<b>over land</b>' : 'over the ocean'}`;
+  } else if (c.kind === 'quake') {
+    const tMin = f * c._span;
+    const shown = c.seq.filter((q) => q[0] <= tMin && q[0] !== 0);
+    map.getSource('cs-quakes').setData(FC(shown.map((q) => pt(q[2], q[1], {
+      mag: q[3], dc: depthClass(q[4]), fresh: Math.max(0, 1 - (tMin - q[0]) / (c._span * 0.04 + 30)) }))));
+    const ringR = state.play.on || f < 0.02 ? ((performance.now() / 12) % 90) : 0;
+    map.getSource('cs-main').setData(FC([
+      pt(c.lon, c.lat, { kind: 'main', mag: c.mag }),
+      ...(f < 0.08 ? [pt(c.lon, c.lat, { kind: 'ring', r: 12 + ringR, o: 1 - ringR / 90 })] : []),
+    ]));
+    const d = Math.floor(tMin / 1440), h = Math.floor((tMin % 1440) / 60);
+    const big = shown.filter((q) => q[3] >= 6).length;
+    $('pTime').innerHTML = `<b>${d ? `Day ${d + 1}, ` : ''}${h} h after main shock</b><br><small>${shown.length} aftershocks shown${big ? ` · ${big} of M6+` : ''}</small>`;
+    const now = document.getElementById('csNow');
+    if (now) now.innerHTML = `<b>${shown.length}</b> aftershocks so far · largest M${shown.length ? Math.max(...shown.map((q) => q[3])).toFixed(1) : '–'}`;
   }
 }
 
-function render() {
-  const sel = (s) => s.id === selected;
-  map.getSource('storms').setData({ type: 'FeatureCollection', features: storms.map((s) => ({
-    type: 'Feature', geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
-    properties: { id: s.id, name: s.name, color: COLORS[s.category.code], icon: `cy-${s.category.code}-${s.lat >= 0 ? 'n' : 's'}`, spin: s.lat >= 0 ? -1 : 1 } })) });
-  map.getSource('tracks').setData({ type: 'FeatureCollection', features: storms.flatMap((s) => (s.track || []).map((t) => ({
-    type: 'Feature', geometry: { type: 'LineString', coordinates: t.coords }, properties: { stage: t.stage, forecast: t.forecast, sel: sel(s) } }))) });
-  map.getSource('points').setData({ type: 'FeatureCollection', features: storms.flatMap((s) => (s.points || []).map((p) => ({
-    type: 'Feature', geometry: { type: 'Point', coordinates: p.c }, properties: { forecast: p.forecast } }))) });
-  map.getSource('cones').setData({ type: 'FeatureCollection', features: storms.filter((s) => s.cone).map((s) => ({
-    type: 'Feature', geometry: s.cone, properties: { sel: sel(s) } })) });
-
-  const major = storms.filter((s) => /C[345]/.test(s.category.code)).length;
-  $('sCount').textContent = storms.length;
-  $('sMajor').textContent = major;
-  $('sBasins').textContent = new Set(storms.map((s) => s.basin.name)).size;
-
-  $('list').innerHTML = storms.length ? storms.map((s) => `
-    <div class="storm ${sel(s) ? 'active' : ''}" data-id="${esc(s.id)}">
-      <div class="badge" style="background:${COLORS[s.category.code]}">${esc(s.category.short)}</div>
-      <div><div class="nm">${esc(s.name)}</div>
-      <div class="meta">${esc(s.basin.name)} · ${s.windKmh} km/h</div></div>
-    </div>`).join('') : '<div class="empty">No active tropical storms right now. Quiet spells are normal, especially outside each basin’s season.</div>';
-  $('list').querySelectorAll('.storm').forEach((el) => el.addEventListener('click', () => select(el.dataset.id, true)));
-  if (selected) showCard(storms.find((s) => s.id === selected));
-}
-
-// ---------- Storm card ----------
-const fmtDate = (s) => s ? new Date(s + (s.endsWith('Z') ? '' : 'Z')).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '–';
-const latStr = (lat) => `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'}`;
-const lonStr = (lon) => `${Math.abs(lon).toFixed(1)}°${lon >= 0 ? 'E' : 'W'}`;
-
-function select(id, fly) {
-  selected = id;
-  const s = storms.find((x) => x.id === id);
-  if (!s) return;
-  stopSpin();
-  render();
-  if (fly) map.flyTo({ center: [s.lon, s.lat], zoom: Math.max(map.getZoom(), 3.4), speed: 0.8 });
-}
-
-function showCard(s) {
+function showCaseCard() {
+  const c = state.caseSel;
   const card = $('card');
-  if (!s) { card.classList.remove('show'); return; }
-  const days = Math.max(1, Math.round((Date.parse(s.to + 'Z') - Date.parse(s.from + 'Z')) / 864e5));
-  const north = s.lat >= 0;
-  const cat = s.category;
-  const catText = /C\d/.test(cat.code) ? `a <b>${cat.label}</b> ${s.basin.term}` : `a <b>${cat.label.toLowerCase()}</b>`;
-  const fc = (s.points || []).filter((p) => p.forecast);
-  const last = fc[fc.length - 1];
-  const questions = [
-    `It is at ${latStr(s.lat)}. Why do tropical storms almost never form within 5° of the Equator?`,
-    `Turn on <i>Sea surface temperature</i>. Is the ocean under it above 27°C? What happens if it moves over cooler water?`,
-    last ? `The forecast takes it to about ${latStr(last.c[1])}, ${lonStr(last.c[0])} by ${fmtDate(last.t)}. Will it strengthen or weaken there, and why?` : `What would make this storm weaken?`,
-    s.countries.length ? `It may affect ${esc(s.countries.join(', '))}. How might the impacts differ between an HIC and an LIC?` : `It is out at sea. Who might still be affected (shipping, islands, fishing)?`,
-  ];
+  const W = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener">${text}</a>`;
+  let head = '', kv = '', teach = '', qs = [];
+  if (c.kind === 'storm') {
+    const peak = Math.max(...c.track.map((p) => p[3] || 0));
+    const cat = category(peak * 1.852);
+    const minP = Math.min(...c.track.map((p) => p[4] || 9999));
+    const north = c.track[0][1] >= 0;
+    head = `<div class="badge" style="background:${COLORS[cat.code]}">${esc(cat.short)}</div>`;
+    kv = `<div><small>Peak wind</small><b>${Math.round(peak * 1.852)} km/h</b><br><small>${Math.round(peak * 1.15)} mph · ${esc(cat.label)}</small></div>
+          <div><small>Lowest pressure</small><b>${minP < 9999 ? minP + ' hPa' : '–'}</b><br><small>lower = stronger</small></div>
+          <div><small>Lifetime</small><b>${Math.round(c._span / 864e5)} days</b><br><small>${fmtDate(c.track[0][0] + ':00', true)}</small></div>
+          <div><small>Development</small><b>${esc(c.dev)}</b></div>`;
+    teach = `<div class="teach" id="csNow"></div>`;
+    qs = [
+      'Pause the replay at landfall. What happens to the wind speed once it is over land, and why?',
+      `Where did it form? Why ${north ? 'north' : 'south'} of the Equator but not right on it?`,
+      c.dev.includes('LIC') || c.dev.includes('NEE') ? 'Compare this with Hurricane Katrina (USA, HIC). Why were the impacts so different?' : 'Compare this with Cyclone Nargis or Typhoon Haiyan. Why were the death tolls so different?',
+    ];
+  } else if (c.kind === 'quake') {
+    head = `<div class="badge" style="background:${DEPTH.shallow}">${c.mag.toFixed(1)}</div>`;
+    kv = `<div><small>Magnitude</small><b>${c.mag.toFixed(1)}</b></div>
+          <div><small>Depth</small><b>${Math.round(c.depth)} km</b><br><small>${DEPTH_LABEL[depthClass(c.depth)]}</small></div>
+          <div><small>Date</small><b>${fmtDate(c.time, true)}</b></div>
+          <div><small>Development</small><b>${esc(c.dev)}</b></div>`;
+    teach = `<div class="teach"><b style="color:${PLATE[c.boundary]}">${c.boundary[0].toUpperCase() + c.boundary.slice(1)} boundary.</b> ${esc(cap(c.boundaryText.replace(/^[A-Z][a-z]+: /, '')))}.</div><div class="teach" id="csNow"></div>`;
+    qs = [
+      'Watch the aftershocks appear. What shape do they make, and what does that tell you about the fault?',
+      c.id === 'haiti-2010' || c.id === 'chile-2010' ? 'Chile’s earthquake was about 500 times more powerful than Haiti’s, yet far fewer people died. Explain why.' : 'How did the level of development affect the impacts and the response?',
+      'Which impacts were primary (caused by the shaking) and which were secondary?',
+    ];
+  } else {
+    head = `<div class="badge tri" style="background:#ff7a3d">V</div>`;
+    kv = `<div><small>Eruption</small><b>${esc(c.date)}</b></div>
+          <div><small>Location</small><b>${latStr(c.lat)}</b><br><small>${lonStr(c.lon)}</small></div>
+          <div><small>Plate boundary</small><b style="color:${PLATE[c.boundary]}">${esc(c.boundary)}</b></div>
+          <div><small>Development</small><b>${esc(c.dev)}</b></div>`;
+    teach = `<div class="teach">${esc(c.boundaryText)}.</div>`;
+    qs = [
+      c.boundary === 'constructive' ? 'Volcanoes at constructive boundaries usually have runny basaltic lava. How does that change the hazard?' : 'Volcanoes at destructive boundaries are often very explosive. Why?',
+      'Turn on plate boundaries. Which other volcanoes or earthquakes in the case studies sit on the same type of boundary?',
+      'Why do people continue to live near active volcanoes?',
+    ];
+  }
   card.innerHTML = `
     <button class="close" aria-label="Close">×</button>
-    <div class="badge" style="background:${COLORS[cat.code]};float:right;margin:4px 26px 0 0">${esc(cat.short)}</div>
-    <h2>${esc(s.name)}</h2>
-    <div class="sub">${esc(s.basin.name)} · ${latStr(s.lat)}, ${lonStr(s.lon)}</div>
-    <div class="kv">
-      <div><small>Max sustained wind</small><b>${s.windKmh} km/h</b><br><small>${s.windMph} mph</small></div>
-      <div><small>Strength</small><b>${esc(cat.label)}</b></div>
-      <div><small>Active since</small><b>${fmtDate(s.from)}</b><br><small>${days} day${days > 1 ? 's' : ''}</small></div>
-      <div><small>GDACS alert</small><b>${esc(s.alert)}</b><br><small>humanitarian impact</small></div>
-    </div>
-    <div class="teach">This is ${catText}. In the ${esc(s.basin.name)}, storms like this are called <b>${s.basin.term}s</b>.</div>
-    <div class="teach">It spins <b>${north ? 'anticlockwise' : 'clockwise'}</b> because it is in the ${north ? 'Northern' : 'Southern'} Hemisphere. The Coriolis effect turns the inflowing air.</div>
-    <div class="q"><b style="color:var(--text)">Discuss</b><ol>${questions.map((q) => `<li>${q}</li>`).join('')}</ol></div>
-    <div class="sub">Solid line: where it has been. Dashed line and white cone: where forecasters expect it to go. ${s.report ? `<a href="${esc(s.report)}" target="_blank" rel="noopener">Full GDACS report</a>` : ''}</div>`;
-  card.querySelector('.close').onclick = () => { selected = null; render(); card.classList.remove('show'); };
+    ${head}
+    <h2>${esc(c.name)}</h2>
+    <div class="sub">${esc(c.where)} · ${c.year}</div>
+    ${c.summary ? `<div class="sub" style="color:var(--text);font-size:13.5px;margin-top:8px">${esc(c.summary)}</div>` : ''}
+    <div class="kv">${kv}</div>
+    ${teach}
+    <b style="font-size:13px">Key facts</b>
+    <ul class="facts">${c.facts.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    <div class="q"><b style="color:var(--text)">Discuss</b><ol>${qs.map((x) => `<li>${x}</li>`).join('')}</ol></div>
+    <div class="src">${W(c.wiki, 'Read more')}${c.usgs ? ' · ' + W(c.usgs, 'USGS event page') : ''}${c.source ? `<br>${esc(c.source)}` : ''}<br>Figures are rounded, widely cited estimates.</div>`;
+  card.querySelector('.close').onclick = closeCard;
   card.classList.add('show');
+  document.body.classList.add('carded');
+  drawCase();
 }
 
-// ---------- Animation: spinning storms and slow globe rotation ----------
+// ----- Player -----
+function play() {
+  if (!state.caseSel || state.caseSel.kind === 'volcano') return;
+  if (state.play.t >= 1) state.play.t = 0;
+  state.play.on = true;
+  $('pPlay').textContent = '❚❚';
+}
+function pause() { state.play.on = false; $('pPlay').textContent = '▶'; }
+$('pPlay').onclick = () => (state.play.on ? pause() : play());
+$('pSlider').oninput = (e) => { pause(); state.play.t = e.target.value / 1000; drawCase(); };
+$('pSpeed').onchange = (e) => (state.play.speed = +e.target.value);
+
+// ================= Animation loop =================
 let spinning = true, userBusy = false;
 function stopSpin() { spinning = false; $('tSpin').checked = false; }
 map.on('mousedown', () => (userBusy = true));
@@ -420,11 +854,22 @@ map.on('dragstart', stopSpin);
 
 function animate() {
   let last = performance.now(), angle = 0, acc = 0;
+  const REPLAY_SECONDS = 24; // a whole case study at 1x
   const tick = (t) => {
     const dt = t - last; last = t; acc += dt;
-    if (acc > 50) { // ~20 fps is plenty
+    if (state.play.on) {
+      state.play.t = Math.min(1, state.play.t + (dt / 1000) * state.play.speed / REPLAY_SECONDS);
+      if (state.play.t >= 1) pause();
+    }
+    if (acc > 50) {
       angle = (angle + acc * 0.12) % 360; acc = 0;
-      if (map.getLayer('storms')) map.setLayoutProperty('storms', 'icon-rotate', ['*', ['get', 'spin'], angle]);
+      const rot = ['*', ['get', 'spin'], angle];
+      if (map.getLayer('storms')) map.setLayoutProperty('storms', 'icon-rotate', rot);
+      if (map.getLayer('cs-storm')) map.setLayoutProperty('cs-storm', 'icon-rotate', rot);
+      if (state.caseSel && state.caseSel.kind !== 'volcano' && (state.play.on || state.play.t < 0.08)) {
+        drawCase();
+        $('pSlider').value = Math.round(state.play.t * 1000);
+      }
       if (spinning && !userBusy && !map.isMoving()) {
         const c = map.getCenter();
         map.jumpTo({ center: [c.lng + 0.06, c.lat] });
@@ -435,18 +880,62 @@ function animate() {
   requestAnimationFrame(tick);
 }
 
-// ---------- Controls ----------
-const vis = (ids, on) => ids.forEach((id) => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
-$('tCone').onchange = (e) => vis(['cones', 'cones-edge'], e.target.checked);
+// ================= Modes, legend and controls =================
+function applyLiveVisibility() {
+  const live = state.mode === 'live';
+  vis(LIVE_STORM_LAYERS, live && $('tStorms').checked);
+  vis(['cones', 'cones-edge'], live && $('tStorms').checked && $('tCone').checked);
+  vis(LIVE_QUAKE_LAYERS, live && $('tQuakes').checked);
+  vis(['basins'], live);
+  vis(CASE_LAYERS, !live);
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.body.classList.toggle('cases', mode === 'cases');
+  $('mLive').classList.toggle('on', mode === 'live');
+  $('mCases').classList.toggle('on', mode === 'cases');
+  $('stats').style.display = mode === 'live' ? '' : 'none';
+  $('updated').style.display = mode === 'live' ? '' : 'none';
+  $('subtitle').textContent = mode === 'live'
+    ? 'Tropical storms and earthquakes happening around the world right now.'
+    : 'Replay famous tropical storms and earthquakes, and explore key volcanic eruptions.';
+  $('card').classList.remove('show');
+  document.body.classList.remove('carded');
+  state.selected = null;
+  if (mode === 'live') { clearCase(); renderLive(); } else { renderList(); }
+  applyLiveVisibility();
+  renderLegend();
+}
+$('mLive').onclick = () => setMode('live');
+$('mCases').onclick = () => setMode('cases');
+
+function renderLegend() {
+  const dot = (c) => `<i style="background:${c}"></i>`;
+  const ln = (c) => `<i class="ln" style="background:${c}"></i>`;
+  const rows = [];
+  const showStorms = state.mode === 'cases' || $('tStorms').checked;
+  const showQuakes = state.mode === 'cases' || $('tQuakes').checked;
+  if (showStorms) rows.push(`<div class="row"><b>Storms</b><span>${dot(COLORS.TD)}Depression</span><span>${dot(COLORS.TS)}Storm</span><span>${dot(COLORS.C1)}Cat 1</span><span>${dot(COLORS.C2)}2</span><span>${dot(COLORS.C3)}3</span><span>${dot(COLORS.C4)}4</span><span>${dot(COLORS.C5)}5</span></div>`);
+  if (showQuakes) rows.push(`<div class="row"><b>Quake depth</b><span>${dot(DEPTH.shallow)}0–70 km</span><span>${dot(DEPTH.inter)}70–300 km</span><span>${dot(DEPTH.deep)}300 km+</span><span style="color:var(--muted)">bigger circle = bigger magnitude</span></div>`);
+  if ($('tPlates').checked) rows.push(`<div class="row"><b>Plates</b><span>${ln(PLATE.constructive)}Constructive</span><span>${ln(PLATE.destructive)}Destructive</span><span>${ln(PLATE.collision)}Collision</span><span>${ln(PLATE.conservative)}Conservative</span></div>`);
+  if ($('tSst').checked) rows.push(`<div class="row"><b>Sea temp</b><span style="display:inline-block;width:160px;height:8px;border-radius:4px;background:linear-gradient(90deg,#2b1a6b,#1e58c9,#15b3c6,#6fe07a,#f4e53a,#f28a1c,#c81d1d)"></span><span style="color:var(--muted)">cooler → warmer</span></div>`);
+  $('legend').innerHTML = rows.join('');
+  $('legend').style.display = rows.length ? '' : 'none';
+}
+
+$('tStorms').onchange = () => { applyLiveVisibility(); renderLegend(); };
+$('tQuakes').onchange = () => { applyLiveVisibility(); renderLegend(); };
+$('tCone').onchange = () => applyLiveVisibility();
+$('tPlates').onchange = (e) => { vis(['plates'], e.target.checked); renderLegend(); };
 $('tNight').onchange = (e) => vis(['night', 'sun'], e.target.checked);
 $('tLines').onchange = (e) => vis(['ref', 'ref-dash', 'ref-label'], e.target.checked);
-$('tSst').onchange = (e) => { vis(['sst'], e.target.checked); $('sstkey').style.display = e.target.checked ? 'flex' : 'none'; };
+$('tSst').onchange = (e) => { vis(['sst'], e.target.checked); renderLegend(); };
 $('tSat').onchange = (e) => vis(['sat'], e.target.checked);
 $('tSpin').onchange = (e) => (spinning = e.target.checked);
 $('bClass').onclick = () => {
   const on = document.body.classList.toggle('classroom');
   $('bClass').textContent = on ? 'Exit classroom mode' : 'Classroom mode';
-  if (on && !selected && storms[0]) select(storms[0].id, true);
 };
 </script>
 </body>
