@@ -61,7 +61,7 @@ h1 span{color:var(--accent)}
 .src{color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--soft);border:1px solid var(--line);margin-right:4px}
 a{color:var(--accent)}
-#controls{right:16px;bottom:40px;padding:10px 12px;font-size:13px;max-height:calc(100% - 56px);overflow:auto;z-index:4}
+#controls{right:56px;bottom:40px;padding:10px 12px;font-size:13px;max-height:calc(100% - 56px);overflow:auto;z-index:4}
 #controls summary{cursor:pointer;font-weight:600;list-style:none;padding:2px 18px 2px 2px;position:relative}
 #controls summary::after{content:'▴';position:absolute;right:0;color:var(--muted)}
 #controls[open] summary{margin-bottom:6px}
@@ -72,15 +72,16 @@ a{color:var(--accent)}
 #controls .livehide{display:none}
 body.cases #controls .liveonly{display:none}
 #legend{left:362px;bottom:16px;padding:8px 12px;font-size:12px;max-width:calc(100% - 590px)}
-#legend .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:2px 0}
-#legend .row b{color:var(--muted);font-weight:600;min-width:72px}
-#legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
-#legend i.ln{width:16px;height:3px;border-radius:2px;vertical-align:2px}
+#legend,.legend{font-size:12px}
+.legend .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:2px 0}
+.legend .row b{color:var(--muted);font-weight:600;min-width:72px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.legend i.ln{width:16px;height:3px;border-radius:2px;vertical-align:2px}
 #player{left:50%;transform:translateX(-50%);bottom:16px;padding:10px 14px;display:none;align-items:center;gap:12px;width:min(560px,calc(100% - 32px))}
 #player.show{display:flex}
 body.cases.playing #legend{display:none}
 #player button{flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--accent);color:#07111e;font-size:16px;cursor:pointer}
-#player input[type=range]{flex:1;accent-color:var(--accent)}
+#player input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
 #player .t{min-width:150px;font-size:12.5px;line-height:1.3}
 #player .t small{color:var(--muted)}
 #player select{background:var(--soft);color:var(--text);border:1px solid var(--line);border-radius:6px;font:inherit;font-size:12px;padding:3px}
@@ -95,17 +96,59 @@ body.classroom #card{width:470px;font-size:18px}
 body.classroom #card h2{font-size:32px}
 body.classroom .teach,body.classroom .facts{font-size:18px}
 body.classroom .kv b{font-size:22px}
-@media (max-width:1100px){ #legend{display:none} }
-@media (max-width:760px){
-  #side{right:16px;width:auto}
-  #side .stats{display:none}
-  #list{flex:0 0 32%;margin-top:auto}
-  #controls{bottom:auto;top:16px;right:16px}
-  #side header{margin-top:44px}
+#sheetHandle{display:none}
+#controlsLegend{display:none}
+.chead .more{display:none}
+/* ---------- Tablet and phone: map first, panels as sheets ---------- */
+@media (max-width:1099px){
+  #side{top:12px;left:12px;right:12px;bottom:12px;width:auto;gap:0}
+  header.panel{padding:8px 10px;display:flex;align-items:center;gap:10px;margin-right:112px}
+  h1{font-size:16px;white-space:nowrap}
+  #subtitle,#stats,#updated{display:none!important}
+  header .tabs{margin-top:0;flex:1;max-width:300px}
+  header .tabs button{padding:6px 4px;font-size:12.5px}
+  #list{position:absolute;left:0;right:0;bottom:0;max-height:60vh;padding:0 6px 6px;display:flex;flex-direction:column}
+  #sheetHandle{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;color:var(--text);font:inherit;font-size:14px;font-weight:600;padding:12px 8px 10px;cursor:pointer;flex:none}
+  #sheetHandle::before{content:'';position:absolute;top:5px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:rgba(255,255,255,.25)}
+  #sheetHandle .chev{margin-left:auto;color:var(--muted);transition:transform .2s}
+  #list.open #sheetHandle .chev{transform:rotate(180deg)}
+  #listBody{overflow:auto;min-height:0}
+  #list:not(.open) #listBody{display:none}
   body.carded #list{display:none}
-  #card{left:16px;right:16px;width:auto;top:auto;bottom:16px;max-height:45%;z-index:3}
-  body.carded #player{bottom:calc(45% + 28px)}
-  #player{bottom:calc(32% + 28px)}
+  #card{left:12px;right:12px;top:auto;bottom:12px;width:auto;max-height:62vh;padding:12px 14px}
+  #card h2{font-size:19px}
+  #card .badge{width:34px;height:34px;font-size:12px;top:12px}
+  .chead{cursor:pointer}
+  .chead .more{display:inline-block;margin-top:6px;border:0;background:none;color:var(--accent);font:inherit;font-size:13px;font-weight:600;padding:0;cursor:pointer}
+  #card.peek .cbody{display:none}
+  #card.peek #csNow{margin-bottom:0}
+  #legend{display:none!important}
+  #controls{top:12px;right:12px;bottom:auto;max-height:calc(100% - 24px);width:auto;max-width:calc(100% - 24px)}
+  #controls:not([open]){padding:0}
+  #controls:not([open]) summary{padding:11px 30px 11px 14px}
+  #controls:not([open]) summary::after{right:12px;top:11px}
+  #controls[open]{width:280px}
+  #controls[open] #controlsLegend{display:block;border-top:1px solid var(--line);margin-top:8px;padding-top:6px}
+  #controls .legend .row b{min-width:0;width:100%}
+  #bClass{display:none}
+  #player{bottom:calc(var(--sheetH,56px) + 22px);width:calc(100% - 24px);padding:8px 10px;gap:8px}
+  #player .t{min-width:0;flex:none;max-width:40%}
+  #player button{width:36px;height:36px}
+  .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group{display:none}
+  .maplibregl-ctrl-bottom-right{top:62px;bottom:auto}
+  body.classroom #card{width:auto}
+}
+/* Tablets: sheets sit bottom-left, replay controls bottom-right */
+@media (max-width:1099px) and (min-width:700px){
+  #list{right:auto;width:400px}
+  #card{right:auto;width:400px;max-height:70vh}
+  #player{left:auto;right:12px;transform:none;bottom:12px;width:calc(100% - 436px)}
+}
+@media (max-width:480px){
+  h1{display:none}
+  header.panel{margin-right:64px}
+  #controls summary .lbl{display:none}
+  #player select{display:none}
 }
 </style>
 </head>
@@ -127,7 +170,7 @@ body.classroom .kv b{font-size:22px}
     </div>
     <div id="updated"></div>
   </header>
-  <div id="list" class="panel"><div class="empty">Loading…</div></div>
+  <div id="list" class="panel"><button id="sheetHandle" aria-expanded="false"><span id="sheetText">Loading…</span><span class="chev">▲</span></button><div id="listBody"><div class="empty">Loading…</div></div></div>
 </aside>
 
 <div id="card" class="panel"></div>
@@ -140,10 +183,10 @@ body.classroom .kv b{font-size:22px}
   <select id="pSpeed" aria-label="Speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
 </div>
 
-<div id="legend" class="panel"></div>
+<div id="legend" class="panel legend"></div>
 
 <details id="controls" class="panel">
-  <summary>Layers</summary>
+  <summary>☰ <span class="lbl">Layers</span></summary>
   <label class="liveonly"><input type="checkbox" id="tStorms" checked> Tropical storms</label>
   <label class="liveonly"><input type="checkbox" id="tQuakes" checked> Earthquakes</label>
   <label class="liveonly"><input type="checkbox" id="tCone" checked> Forecast cones</label>
@@ -155,6 +198,7 @@ body.classroom .kv b{font-size:22px}
   <label><input type="checkbox" id="tSat"> Satellite (yesterday)</label>
   <label><input type="checkbox" id="tSpin" checked> Spin the globe</label>
   <button id="bClass">Classroom mode</button>
+  <div id="controlsLegend" class="legend"></div>
 </details>
 
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
@@ -236,6 +280,8 @@ const map = new maplibregl.Map({
   },
 });
 map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+// On small screens, start with the credits folded into the (i) button
+map.once('load', () => setTimeout(() => { if (window.matchMedia('(max-width: 1099px)').matches) document.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'); }, 300));
 
 // ----- Icons drawn on canvas -----
 function cycloneIcon(color, southern) {
@@ -518,7 +564,8 @@ function renderLive() {
 }
 
 function renderList() {
-  const list = $('list');
+  updateSheetText();
+  const list = $('listBody');
   if (state.mode === 'cases') { renderCaseList(); return; }
   const t = state.liveTab;
   let html = `<div class="tabs"><button data-tab="storms" class="${t === 'storms' ? 'on' : ''}">Storms (${state.storms.length})</button><button data-tab="quakes" class="${t === 'quakes' ? 'on' : ''}">Earthquakes (${state.quakes.length})</button></div>`;
@@ -543,6 +590,8 @@ function renderList() {
 
 function selectLive(kind, id, fly) {
   state.selected = { kind, id };
+  if (state.selected.id !== state.lastCardId) state.cardPeek = isCompact();
+  sheet(false);
   state.liveTab = kind === 'storm' ? 'storms' : 'quakes';
   stopSpin();
   renderLive();
@@ -550,11 +599,59 @@ function selectLive(kind, id, fly) {
   if (o && fly) map.flyTo({ center: [o.lon, o.lat], zoom: Math.max(map.getZoom(), kind === 'storm' ? 3.4 : 3), speed: 0.8 });
 }
 
+// ---------- Compact (phone/tablet) layout helpers ----------
+const compactMQ = window.matchMedia('(max-width: 1099px)');
+const isCompact = () => compactMQ.matches;
+function sheet(open) {
+  $('list').classList.toggle('open', open);
+  $('sheetHandle').setAttribute('aria-expanded', open);
+}
+$('sheetHandle').onclick = () => sheet(!$('list').classList.contains('open'));
+function updateSheetText() {
+  $('sheetText').textContent = state.mode === 'live'
+    ? `${state.storms.length} storms · ${state.quakes.length} earthquakes`
+    : `${state.cases ? allCases().length : ''} case studies`;
+}
+// Keep the replay bar just above whichever sheet is showing
+const syncSheetH = () => {
+  const el = document.body.classList.contains('carded') ? $('card') : $('list');
+  document.documentElement.style.setProperty('--sheetH', (el.offsetHeight || 56) + 'px');
+};
+new ResizeObserver(syncSheetH).observe($('card'));
+new ResizeObserver(syncSheetH).observe($('list'));
+compactMQ.addEventListener('change', () => { $('card').classList.toggle('peek', isCompact() && state.cardPeek); syncSheetH(); });
+
+// Split the card into an always-visible head and a body that folds away on small screens
+function finishCard() {
+  const card = $('card');
+  const head = document.createElement('div'), body = document.createElement('div');
+  head.className = 'chead'; body.className = 'cbody';
+  for (const n of [...card.childNodes]) {
+    const keep = n.nodeType === 1 && (n.matches('.close, .badge, h2') || n.id === 'csNow' || (n.matches('.sub') && !head.querySelector('.sub')));
+    (keep ? head : body).append(n);
+  }
+  const more = document.createElement('button');
+  more.className = 'more';
+  head.append(more);
+  card.append(head, body);
+  const setPeek = (p) => { state.cardPeek = p; card.classList.toggle('peek', isCompact() && p); more.textContent = p ? 'Show details ▲' : 'Hide details ▼'; };
+  setPeek(state.cardPeek);
+  head.onclick = (e) => { if (!isCompact() || e.target.closest('.close, a')) return; setPeek(!state.cardPeek); };
+  card.querySelector('.close').onclick = (e) => { e.stopPropagation(); closeCard(); };
+  state.lastCardId = state.selected?.id || state.caseSel?.id;
+  card.classList.add('show');
+  document.body.classList.add('carded');
+  if (state.caseSel) drawCase();
+  syncSheetH();
+}
+
 function closeCard() {
+  state.lastCardId = null;
   document.body.classList.remove('carded');
   state.selected = null;
   $('card').classList.remove('show');
   if (state.mode === 'live') renderLive(); else clearCase();
+  syncSheetH();
 }
 
 function nearestBoundary(lon, lat) {
@@ -632,9 +729,7 @@ function showLiveCard() {
       <div class="q"><b style="color:var(--text)">Discuss</b><ol>${questions.map((x) => `<li>${x}</li>`).join('')}</ol></div>
       <div class="src"><a href="${esc(q.url)}" target="_blank" rel="noopener">USGS event page</a> · Magnitude is logarithmic: each whole number is about 32 times more energy.</div>`;
   }
-  card.querySelector('.close').onclick = closeCard;
-  card.classList.add('show');
-  document.body.classList.add('carded');
+  finishCard();
 }
 
 // ================= Case studies =================
@@ -659,7 +754,7 @@ function allCases() {
 }
 
 function renderCaseList() {
-  const list = $('list');
+  const list = $('listBody');
   if (!state.cases) { list.innerHTML = '<div class="empty">Loading case studies…</div>'; return; }
   const cases = allCases();
   const group = (kind, title) => `<div class="group">${title}</div>` + cases.filter((c) => c.kind === kind).sort((a, b) => b.year - a.year).map((c) => `
@@ -683,6 +778,8 @@ function clearCase() {
 function openCase(c) {
   clearCase();
   state.caseSel = c;
+  state.cardPeek = isCompact();
+  sheet(false);
   stopSpin();
   renderCaseList();
   if (c.kind === 'storm') {
@@ -713,8 +810,10 @@ function openCase(c) {
 function fitTo(coords) {
   let [minX, minY, maxX, maxY] = [180, 90, -180, -90];
   for (const [x, y] of coords) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
-  const small = window.innerWidth < 760;
-  const padding = small ? { top: 170, bottom: Math.round(window.innerHeight * 0.45), left: 30, right: 30 } : { top: 80, bottom: 120, left: 380, right: 400 };
+  const W = window.innerWidth, H = window.innerHeight;
+  const padding = !isCompact() ? { top: 80, bottom: 120, left: 380, right: 400 }
+    : W >= 700 ? { top: 80, bottom: 90, left: 430, right: 40 }          // tablet: card on the left
+    : { top: 80, bottom: Math.round(H * 0.4), left: 30, right: 30 };  // phone: card along the bottom
   try { map.fitBounds([[minX, minY], [maxX, maxY]], { padding, maxZoom: 5, duration: 1500 }); }
   catch (e) { map.flyTo({ center: [(minX + maxX) / 2, (minY + maxY) / 2], zoom: 3 }); }
 }
@@ -825,9 +924,7 @@ function showCaseCard() {
     <ul class="facts">${c.facts.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
     <div class="q"><b style="color:var(--text)">Discuss</b><ol>${qs.map((x) => `<li>${x}</li>`).join('')}</ol></div>
     <div class="src">${W(c.wiki, 'Read more')}${c.usgs ? ' · ' + W(c.usgs, 'USGS event page') : ''}${c.source ? `<br>${esc(c.source)}` : ''}<br>Figures are rounded, widely cited estimates.</div>`;
-  card.querySelector('.close').onclick = closeCard;
-  card.classList.add('show');
-  document.body.classList.add('carded');
+  finishCard();
   drawCase();
 }
 
@@ -904,6 +1001,9 @@ function setMode(mode) {
   document.body.classList.remove('carded');
   state.selected = null;
   if (mode === 'live') { clearCase(); renderLive(); } else { renderList(); }
+  if (isCompact()) sheet(mode === 'cases');
+  $('controls').open = false;
+  syncSheetH();
   applyLiveVisibility();
   renderLegend();
 }
@@ -921,6 +1021,7 @@ function renderLegend() {
   if ($('tPlates').checked) rows.push(`<div class="row"><b>Plates</b><span>${ln(PLATE.constructive)}Constructive</span><span>${ln(PLATE.destructive)}Destructive</span><span>${ln(PLATE.collision)}Collision</span><span>${ln(PLATE.conservative)}Conservative</span></div>`);
   if ($('tSst').checked) rows.push(`<div class="row"><b>Sea temp</b><span style="display:inline-block;width:160px;height:8px;border-radius:4px;background:linear-gradient(90deg,#2b1a6b,#1e58c9,#15b3c6,#6fe07a,#f4e53a,#f28a1c,#c81d1d)"></span><span style="color:var(--muted)">cooler → warmer</span></div>`);
   $('legend').innerHTML = rows.join('');
+  $('controlsLegend').innerHTML = rows.join('');
   $('legend').style.display = rows.length ? '' : 'none';
 }
 
@@ -933,6 +1034,8 @@ $('tLines').onchange = (e) => vis(['ref', 'ref-dash', 'ref-label'], e.target.che
 $('tSst').onchange = (e) => { vis(['sst'], e.target.checked); renderLegend(); };
 $('tSat').onchange = (e) => vis(['sat'], e.target.checked);
 $('tSpin').onchange = (e) => (spinning = e.target.checked);
+// On small screens, tapping the globe tucks the menus away
+map.on('click', () => { if (isCompact()) { $('controls').open = false; sheet(false); } });
 $('bClass').onclick = () => {
   const on = document.body.classList.toggle('classroom');
   $('bClass').textContent = on ? 'Exit classroom mode' : 'Classroom mode';
