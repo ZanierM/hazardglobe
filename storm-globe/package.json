@@ -1,0 +1,8 @@
+{
+  "name": "storm-globe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Live tropical storm tracker on a 3D globe, for Geography teaching",
+  "engines": { "node": ">=18" }
+}
