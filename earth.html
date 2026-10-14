@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inside the Earth</title>
+<style>
+:root{
+  --bg:#05070d; --panel:rgba(12,17,28,.9); --line:rgba(255,255,255,.12); --soft:rgba(255,255,255,.06);
+  --text:#e8edf5; --muted:#9aa7bc; --accent:#5ebaff;
+  --crust:#a87b52; --mantle:#e0582a; --outer:#f39a2b; --inner:#ffd96a;
+  --font: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+button{font:inherit;color:inherit}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(8px)}
+
+header{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;align-items:center;gap:18px;padding:10px 16px;flex-wrap:wrap}
+header h1{margin:0;font-size:24px;font-weight:700;letter-spacing:.2px}
+header h1 span{color:var(--accent)}
+.tabs{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:10px}
+.tabs button{border:0;background:none;padding:9px 16px;border-radius:8px;cursor:pointer;font-size:17px;color:var(--muted)}
+.tabs button.on{background:var(--accent);color:#04121f;font-weight:600}
+header .spacer{flex:1}
+header a{color:var(--muted);text-decoration:none;font-size:15px}
+header a:hover{color:var(--text)}
+
+.view{position:fixed;inset:0;display:none}
+.view.on{display:block}
+
+/* ---------- Layers ---------- */
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#labels{position:absolute;inset:0;pointer-events:none}
+.lab{position:absolute;transform:translate(-50%,-50%);padding:6px 12px;border-radius:999px;font-size:18px;font-weight:600;white-space:nowrap;
+  background:rgba(5,7,13,.78);border:2px solid var(--c);color:#fff;pointer-events:auto;cursor:pointer;transition:opacity .2s}
+.lab.num{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:20px}
+.lab.sel{background:var(--c);color:#111}
+
+#layerList{position:absolute;left:14px;top:96px;padding:10px;display:flex;flex-direction:column;gap:6px;z-index:5;width:210px}
+#layerList button{display:flex;align-items:center;gap:10px;border:1px solid transparent;background:var(--soft);padding:10px 12px;border-radius:10px;cursor:pointer;font-size:17px;text-align:left}
+#layerList button i{width:16px;height:16px;border-radius:50%;background:var(--c);flex:none}
+#layerList button.on{border-color:var(--c);background:rgba(255,255,255,.1)}
+#layerList .tools{display:flex;gap:6px;margin-top:6px}
+#layerList .tools button{flex:1;justify-content:center;font-size:14px;padding:8px}
+#layerList .tools button.on{border-color:var(--accent)}
+.hint{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
+
+#info{position:absolute;right:14px;top:96px;width:min(400px,calc(100% - 28px));padding:20px 22px;z-index:5}
+#info h2{margin:0 0 4px;font-size:32px;display:flex;align-items:center;gap:12px}
+#info h2 i{width:22px;height:22px;border-radius:50%;background:var(--c)}
+#info .depth{color:var(--muted);font-size:17px;margin-bottom:14px}
+#info dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:10px 14px;font-size:18px;line-height:1.35}
+#info dt{color:var(--muted)}
+#info dd{margin:0}
+#info .fact{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:17px;line-height:1.45}
+#info .reveal{margin-top:10px;border:1px solid var(--accent);background:none;padding:10px 16px;border-radius:10px;cursor:pointer;font-size:17px;color:var(--accent)}
+#scaleNote{position:absolute;left:14px;bottom:14px;font-size:13px;color:var(--muted);padding:8px 12px;z-index:5}
+
+/* ---------- Convection ---------- */
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#convSide{position:absolute;right:14px;top:96px;width:min(380px,calc(100% - 28px));padding:20px 22px}
+#convSide h2{margin:0 0 12px;font-size:28px}
+#convSide ol{margin:0;padding-left:22px;font-size:18px;line-height:1.45}
+#convSide li{margin-bottom:10px}
+#convSide .note{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:15px;color:var(--muted);line-height:1.45}
+#convSide .row{display:flex;gap:8px;margin-top:14px}
+#convSide .row button{flex:1;border:1px solid var(--line);background:var(--soft);padding:9px;border-radius:10px;cursor:pointer;font-size:15px}
+.key{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--muted);margin-top:12px}
+.key span{display:inline-block;width:90px;height:10px;border-radius:5px;background:linear-gradient(90deg,#4d9fff,#fff1a8)}
+
+/* ---------- Crust ---------- */
+#crust{overflow:auto}
+#crust .wrap{max-width:1180px;margin:0 auto;padding:100px 20px 30px}
+#crust svg{width:100%;height:auto;display:block;border-radius:14px}
+.cols{display:grid;grid-template-columns:auto 1fr 1fr;margin-top:18px;font-size:19px;border-radius:14px;overflow:hidden}
+.cols div{padding:13px 16px;border-bottom:1px solid var(--line)}
+.cols .h{font-weight:700;font-size:21px}
+.cols .k{color:var(--muted)}
+.cols .oc{background:rgba(74,94,112,.18)}
+.cols .cc{background:rgba(201,162,126,.12)}
+.cols .last{border-bottom:0}
+.takeaway{margin-top:16px;padding:16px 20px;font-size:19px;line-height:1.45}
+.takeaway b{color:var(--accent)}
+
+@media (max-width:800px){
+  header h1{font-size:20px}
+  .tabs button{font-size:15px;padding:8px 10px}
+  #layerList{top:auto;bottom:14px;width:auto;right:14px;flex-direction:row;flex-wrap:wrap}
+  #layerList .hint,#scaleNote{display:none}
+  #info{top:auto;bottom:146px;padding:12px 14px}
+  #info h2{font-size:24px}
+  #info dl{font-size:15px;gap:6px 10px}
+  #info .fact,#info .depth{display:none}
+  #layerList button{padding:7px 10px;font-size:15px}
+  #convSide{top:auto;bottom:14px;max-height:45vh;overflow:auto}
+  .cols{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<header class="panel">
+  <h1>Inside the <span>Earth</span></h1>
+  <div class="tabs" role="tablist">
+    <button data-v="layers" class="on" role="tab">Layers</button>
+    <button data-v="conv" role="tab">Convection currents</button>
+    <button data-v="crust" role="tab">Oceanic vs continental</button>
+  </div>
+  <div class="spacer"></div>
+  <a href="index.html">Hazard Globe →</a>
+</header>
+
+<!-- ============ LAYERS ============ -->
+<section id="layers" class="view on">
+  <canvas id="gl"></canvas>
+  <div id="labels"></div>
+  <div id="layerList" class="panel">
+    <div class="tools">
+      <button id="tLabels" class="on" title="Shortcut: L">Names</button>
+      <button id="tSpin" class="on">Spin</button>
+    </div>
+    <div class="hint">Turn names off to show numbers, so the class can name each layer. Keys 1–4 pick a layer.</div>
+  </div>
+  <div id="info" class="panel"></div>
+  <div id="scaleNote" class="panel">Layer depths are to scale, except the crust, which is drawn thicker so you can see it.</div>
+</section>
+
+<!-- ============ CONVECTION ============ -->
+<section id="conv" class="view">
+  <canvas id="cv"></canvas>
+  <div id="convSide" class="panel">
+    <h2>Convection currents</h2>
+    <ol>
+      <li>Heat from the core warms rock at the bottom of the mantle.</li>
+      <li>The hot rock becomes less dense and rises slowly.</li>
+      <li>Near the crust it spreads out sideways, cools and sinks again.</li>
+      <li>This circular movement drags the plates above it. Where currents rise, plates move apart. Where they sink, plates move together.</li>
+    </ol>
+    <div class="key"><span></span> cooler → hotter rock</div>
+    <div class="note">Much of the core's heat comes from the decay of radioactive elements. Scientists now think plates are also pushed and pulled by their own weight: <b>ridge push</b> at spreading ridges and <b>slab pull</b> where a plate sinks.</div>
+    <div class="row">
+      <button id="cPlay">Pause</button>
+      <button id="cLab">Hide labels</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CRUST ============ -->
+<section id="crust" class="view">
+  <div class="wrap">
+    <svg viewBox="0 0 1000 380" role="img" aria-label="Cross-section comparing thick continental crust with thin oceanic crust">
+      <defs>
+        <linearGradient id="gMantle" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c2461f"/><stop offset="1" stop-color="#e9732f"/></linearGradient>
+        <linearGradient id="gSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c74c9"/><stop offset="1" stop-color="#123f7a"/></linearGradient>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a2e"/><stop offset="1" stop-color="#16304f"/></linearGradient>
+        <pattern id="pGranite" width="22" height="22" patternUnits="userSpaceOnUse">
+          <rect width="22" height="22" fill="#cfa881"/><circle cx="5" cy="6" r="1.8" fill="#8a6a50"/><circle cx="15" cy="14" r="1.5" fill="#f1dcc4"/><circle cx="17" cy="4" r="1.2" fill="#6b5240"/><circle cx="7" cy="17" r="1.3" fill="#e9cfb2"/>
+        </pattern>
+        <pattern id="pBasalt" width="16" height="16" patternUnits="userSpaceOnUse">
+          <rect width="16" height="16" fill="#4d5966"/><circle cx="4" cy="5" r="1" fill="#2f3842"/><circle cx="11" cy="11" r="1" fill="#6a7684"/>
+        </pattern>
+      </defs>
+      <rect width="1000" height="380" fill="url(#gSky)"/>
+      <!-- mantle -->
+      <rect y="200" width="1000" height="180" fill="url(#gMantle)"/>
+      <!-- sea -->
+      <path d="M520 120 L1000 120 L1000 205 L640 205 C600 205 580 160 545 128 Z" fill="url(#gSea)"/>
+      <!-- oceanic crust -->
+      <path d="M560 205 L1000 205 L1000 238 L600 238 Z" fill="url(#pBasalt)"/>
+      <!-- continental crust: mountains on top, deep root below -->
+      <path d="M0 112 L120 110 L170 70 L205 92 L240 48 L280 84 L320 62 L360 104 L470 110 L520 120 L545 128 C580 160 600 205 640 205 L600 238 C560 238 520 260 470 262 L380 300 L250 330 L140 300 L0 280 Z" fill="url(#pGranite)"/>
+      <path d="M240 48 L228 60 L252 60 Z" fill="#f4f7fb"/>
+      <!-- thickness arrows -->
+      <g stroke="#fff" stroke-width="2" fill="#fff">
+        <line x1="70" y1="120" x2="70" y2="276"/><path d="M64 128 L70 116 L76 128Z"/><path d="M64 268 L70 280 L76 268Z"/>
+        <line x1="880" y1="209" x2="880" y2="234"/><path d="M875 214 L880 205 L885 214Z"/><path d="M875 229 L880 238 L885 229Z"/>
+      </g>
+      <g font-family="system-ui,sans-serif" fill="#fff">
+        <text x="84" y="205" font-size="19" font-weight="700">30–70 km</text>
+        <text x="894" y="228" font-size="19" font-weight="700">5–10 km</text>
+        <text x="220" y="190" font-size="24" font-weight="700" fill="#2a1d12">Continental crust</text>
+        <text x="220" y="216" font-size="18" fill="#3b2a1b">granite · less dense · older</text>
+        <text x="690" y="270" font-size="24" font-weight="700">Oceanic crust</text>
+        <text x="690" y="294" font-size="18" fill="#ffe3d1">basalt · denser · younger</text>
+        <text x="760" y="168" font-size="22" font-weight="600" fill="#cfe5ff">Ocean</text>
+        <text x="420" y="355" font-size="22" font-weight="600" fill="#ffe3d1">Mantle</text>
+        <text x="990" y="370" font-size="13" text-anchor="end" fill="#ffe3d1">Not to scale</text>
+      </g>
+    </svg>
+
+    <div class="cols panel">
+      <div class="h"></div><div class="h cc">Continental crust</div><div class="h oc">Oceanic crust</div>
+      <div class="k">Thickness</div><div class="cc">30–70 km (thickest under mountains)</div><div class="oc">5–10 km</div>
+      <div class="k">Rock type</div><div class="cc">Mostly granite</div><div class="oc">Mostly basalt</div>
+      <div class="k">Density</div><div class="cc">Lighter, about 2.7 g/cm³</div><div class="oc">Heavier, about 3.0 g/cm³</div>
+      <div class="k">Age</div><div class="cc">Up to 4 billion years old</div><div class="oc">Under 200 million years old</div>
+      <div class="k last">Can it sink?</div><div class="cc last">No. It is too light, so it is not destroyed.</div><div class="oc last">Yes. It sinks into the mantle and is destroyed.</div>
+    </div>
+
+    <div class="takeaway panel">Why it matters: when the two types meet, the <b>denser oceanic crust sinks</b> beneath the continental crust. This is what happens at destructive plate margins, and it explains why the ocean floor is so much younger than the continents.</div>
+  </div>
+</section>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ---------------- Tabs ---------------- */
+const tabs = document.querySelectorAll('.tabs button');
+let current = 'layers';
+tabs.forEach(b => b.onclick = () => show(b.dataset.v));
+function show(v){
+  current = v;
+  tabs.forEach(t => t.classList.toggle('on', t.dataset.v === v));
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === v));
+  resize();
+}
+
+/* ---------------- Layer data ---------------- */
+// Radii as a fraction of Earth's radius (6,371 km). Crust exaggerated for visibility.
+const LAYERS = [
+  { id:'crust', name:'Crust', css:'--crust', r0:.94, r1:1, cIn:'#7a5636', cOut:'#b98c5f',
+    depth:'0 to 70 km deep',
+    temp:'Up to about 1,000°C at its base',
+    state:'Solid rock',
+    made:'Granite (continental) and basalt (oceanic)',
+    fact:'The crust is broken into large pieces called tectonic plates. If the Earth were an apple, the crust would be thinner than its skin.' },
+  { id:'mantle', name:'Mantle', css:'--mantle', r0:.546, r1:.94, cIn:'#f07a32', cOut:'#a83419',
+    depth:'70 to 2,900 km deep',
+    temp:'About 1,000°C to 3,700°C',
+    state:'Mostly solid, but hot enough to flow very slowly',
+    made:'Rock rich in iron and magnesium',
+    fact:'The thickest layer, making up about 84% of Earth\'s volume. The soft upper mantle is what the plates move over.' },
+  { id:'outer', name:'Outer core', css:'--outer', r0:.191, r1:.546, cIn:'#ffc145', cOut:'#e8781f',
+    depth:'2,900 to 5,150 km deep',
+    temp:'About 4,000°C to 5,000°C',
+    state:'Liquid',
+    made:'Iron and nickel',
+    fact:'Liquid iron moving around in the outer core creates Earth\'s magnetic field.' },
+  { id:'inner', name:'Inner core', css:'--inner', r0:0, r1:.191, cIn:'#fffbe0', cOut:'#ffd25a',
+    depth:'5,150 to 6,371 km deep (the centre)',
+    temp:'About 5,400°C, as hot as the surface of the Sun',
+    state:'Solid',
+    made:'Iron and nickel',
+    fact:'It is hotter than the outer core, yet solid, because the pressure from the layers above is so great.' },
+];
+const cssVal = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------------- Three.js scene ---------------- */
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(38, 1, .1, 100);
+camera.position.set(-2.6, 1.35, -2.6);
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 2.2;
+controls.maxDistance = 7;
+controls.autoRotate = true;
+controls.autoRotateSpeed = .6;
+
+scene.add(new THREE.AmbientLight(0xffffff, .55));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+scene.add(sun);
+
+// Stars
+{
+  const g = new THREE.BufferGeometry(), n = 1500, p = new Float32Array(n*3);
+  for (let i=0;i<n;i++){ const v = new THREE.Vector3().randomDirection().multiplyScalar(30+Math.random()*20); p.set([v.x,v.y,v.z], i*3); }
+  g.setAttribute('position', new THREE.BufferAttribute(p,3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:0xffffff, size:.08, transparent:true, opacity:.7 })));
+}
+
+const earth = new THREE.Group();
+scene.add(earth);
+
+// Outer surface with a quarter wedge removed (the gap faces the -x/-z quadrant)
+const PHI_LEN = Math.PI * 1.5;
+const surfGeo = new THREE.SphereGeometry(1, 128, 96, 0, PHI_LEN);
+{ const uv = surfGeo.attributes.uv; for (let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i) * PHI_LEN / (Math.PI*2)); }
+const surfMat = new THREE.MeshStandardMaterial({ color:0x2d5a8a, roughness:.85, metalness:0 });
+new THREE.TextureLoader().load('img/earth.jpg', t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; surfMat.map = t; surfMat.color.set(0xffffff); surfMat.needsUpdate = true; });
+const surface = new THREE.Mesh(surfGeo, surfMat);
+surface.userData.layer = 0;
+earth.add(surface);
+
+// Cut faces: a half-ring for each layer on each of the two cut planes
+const FACE_DIRS = [ { a:Math.PI, d:new THREE.Vector3(-1,0,0), n:new THREE.Vector3(0,0,-1) },
+                    { a:Math.PI/2, d:new THREE.Vector3(0,0,-1), n:new THREE.Vector3(-1,0,0) } ];
+const faceMeshes = [];
+LAYERS.forEach((L, li) => {
+  const cIn = new THREE.Color(L.cIn), cOut = new THREE.Color(L.cOut);
+  FACE_DIRS.forEach(F => {
+    const g = new THREE.RingGeometry(Math.max(L.r0, .0001), L.r1, 96, 8, -Math.PI/2, Math.PI);
+    const pos = g.attributes.position, cols = new Float32Array(pos.count*3), c = new THREE.Color();
+    for (let i=0;i<pos.count;i++){
+      const r = Math.hypot(pos.getX(i), pos.getY(i));
+      const t = L.r1 === L.r0 ? 0 : (r - L.r0) / (L.r1 - L.r0);
+      c.copy(cIn).lerp(cOut, t); cols.set([c.r,c.g,c.b], i*3);
+    }
+    g.setAttribute('color', new THREE.BufferAttribute(cols,3));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.DoubleSide }));
+    m.rotation.y = F.a;
+    m.userData.layer = li;
+    earth.add(m);
+    faceMeshes.push(m);
+  });
+  // Thin boundary line on each face
+  FACE_DIRS.forEach(F => {
+    if (L.r0 <= 0) return;
+    const pts = [];
+    for (let k=0;k<=64;k++){ const th = -Math.PI/2 + Math.PI*k/64; pts.push(new THREE.Vector3(Math.cos(th)*L.r0, Math.sin(th)*L.r0, 0)); }
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x000000, transparent:true, opacity:.35 }));
+    line.rotation.y = F.a; line.position.addScaledVector(F.n, .001);
+    earth.add(line);
+  });
+});
+
+// Highlight overlay: a bright outline drawn around the selected layer on both faces
+const hlGroup = new THREE.Group(); earth.add(hlGroup);
+function buildHighlight(li){
+  hlGroup.clear();
+  const L = LAYERS[li];
+  FACE_DIRS.forEach(F => {
+    const g = new THREE.RingGeometry(Math.max(L.r0,.0001), L.r1, 96, 1, -Math.PI/2, Math.PI);
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false }));
+    m.rotation.y = F.a; m.position.addScaledVector(F.n, .002);
+    hlGroup.add(m);
+  });
+}
+
+/* ---------------- Labels ---------------- */
+const labelsEl = document.getElementById('labels');
+let showNames = true, selected = 0, revealed = true;
+const anchors = LAYERS.map((L, i) => {
+  const r = L.r0 === 0 ? .1 : (L.r0 + L.r1) / 2;
+  const el = document.createElement('div');
+  el.className = 'lab';
+  el.style.setProperty('--c', cssVal(L.css));
+  el.onclick = () => select(i);
+  labelsEl.appendChild(el);
+  // Angle on the cut face for each label, spread so they don't overlap
+  const th = [.6, .3, -.35, -1.25][i];
+  return { el, r, th };
+});
+function drawLabels(){
+  anchors.forEach((A, i) => {
+    A.el.textContent = showNames ? LAYERS[i].name : (i+1);
+    A.el.classList.toggle('num', !showNames);
+    A.el.classList.toggle('sel', i === selected);
+  });
+}
+const tmp = new THREE.Vector3(), camLocal = new THREE.Vector3();
+function placeLabels(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  camLocal.copy(camera.position); earth.worldToLocal(camLocal);
+  // Pick the cut face that faces the camera most
+  const F = FACE_DIRS.reduce((best, f) => f.n.dot(camLocal) > best.n.dot(camLocal) ? f : best);
+  const facing = F.n.dot(camLocal) > .15;
+  anchors.forEach(A => {
+    tmp.copy(F.d).multiplyScalar(Math.cos(A.th) * A.r).add(new THREE.Vector3(0, Math.sin(A.th) * A.r, 0)).addScaledVector(F.n, .01);
+    earth.localToWorld(tmp); tmp.project(camera);
+    A.el.style.left = ((tmp.x + 1) / 2 * w) + 'px';
+    A.el.style.top = ((1 - tmp.y) / 2 * h) + 'px';
+    A.el.style.opacity = facing ? 1 : 0;
+    A.el.style.pointerEvents = facing ? 'auto' : 'none';
+  });
+}
+
+/* ---------------- Selection + info card ---------------- */
+const infoEl = document.getElementById('info');
+const listEl = document.getElementById('layerList');
+const listBtns = LAYERS.map((L, i) => {
+  const b = document.createElement('button');
+  b.innerHTML = `<i></i><span>${L.name}</span>`;
+  b.style.setProperty('--c', cssVal(L.css));
+  b.onclick = () => select(i);
+  listEl.insertBefore(b, listEl.querySelector('.tools'));
+  return b;
+});
+function select(i){
+  selected = i;
+  revealed = showNames;
+  buildHighlight(i);
+  renderInfo(); drawLabels(); updateList();
+}
+function updateList(){
+  listBtns.forEach((b, i) => {
+    b.classList.toggle('on', i === selected);
+    b.querySelector('span').textContent = showNames ? LAYERS[i].name : 'Layer ' + (i+1);
+  });
+}
+function renderInfo(){
+  const L = LAYERS[selected];
+  infoEl.style.setProperty('--c', cssVal(L.css));
+  const title = revealed ? L.name : 'Layer ' + (selected+1);
+  infoEl.innerHTML = `
+    <h2><i></i>${title}</h2>
+    <div class="depth">${revealed ? L.depth : 'Can you name this layer?'}</div>
+    ${revealed ? `
+    <dl>
+      <dt>Temperature</dt><dd>${L.temp}</dd>
+      <dt>State</dt><dd>${L.state}</dd>
+      <dt>Made of</dt><dd>${L.made}</dd>
+    </dl>
+    <div class="fact">${L.fact}</div>` : `<button class="reveal">Reveal</button>`}`;
+  const rb = infoEl.querySelector('.reveal');
+  if (rb) rb.onclick = () => { revealed = true; renderInfo(); };
+}
+
+document.getElementById('tLabels').onclick = e => {
+  showNames = !showNames; e.currentTarget.classList.toggle('on', showNames);
+  revealed = showNames; renderInfo(); drawLabels(); updateList();
+};
+document.getElementById('tSpin').onclick = e => {
+  controls.autoRotate = !controls.autoRotate; e.currentTarget.classList.toggle('on', controls.autoRotate);
+};
+addEventListener('keydown', e => {
+  if (current !== 'layers') return;
+  if (e.key >= '1' && e.key <= '4') select(+e.key - 1);
+  if (e.key.toLowerCase() === 'l') document.getElementById('tLabels').click();
+});
+
+// Click to select a layer
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const r = canvas.getBoundingClientRect();
+  mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects([surface, ...faceMeshes])[0];
+  if (hit) select(hit.object.userData.layer);
+});
+
+/* ---------------- Convection (2D canvas) ---------------- */
+const cv = document.getElementById('cv'), cx2 = cv.getContext('2d');
+let convPlaying = true, convLabels = true, convTime = 0;
+document.getElementById('cPlay').onclick = e => { convPlaying = !convPlaying; e.currentTarget.textContent = convPlaying ? 'Pause' : 'Play'; };
+document.getElementById('cLab').onclick = e => { convLabels = !convLabels; e.currentTarget.textContent = convLabels ? 'Hide labels' : 'Show labels'; };
+
+const N_CELLS = 6, STEP = Math.PI * 2 / N_CELLS;
+const bounds = [...Array(N_CELLS)].map((_, k) => -Math.PI/2 + k * STEP);   // boundary angles; even = rising, odd = sinking
+const cells = [...Array(N_CELLS)].map((_, i) => ({ mid: bounds[i] + STEP/2, dir: i % 2 ? 1 : -1 }));
+const particles = [];
+cells.forEach((c, ci) => { for (let j=0;j<110;j++) particles.push({ ci, t: Math.random()*Math.PI*2, k: .45 + Math.random()*.55 }); });
+const lerpCol = (a, b, t) => `rgb(${a.map((v,i) => Math.round(v + (b[i]-v)*t)).join(',')})`;
+const COOL = [77,159,255], HOT = [255,241,168];
+
+function drawConvection(dt){
+  const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(devicePixelRatio, 2);
+  if (cv.width !== w*dpr || cv.height !== h*dpr){ cv.width = w*dpr; cv.height = h*dpr; }
+  const g = cx2; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  const side = w > 800 ? 410 : 0;
+  const cx = (w - side) / 2, cy = h / 2 + 30;
+  const R = Math.min((w - side) * .4, (h - 130) * .42);
+  if (R < 40) return;
+  const rCrust = R * .94, rCore = R * .546, rInner = R * .191;
+  const cellIn = rCore * 1.05, cellOut = rCrust * .96, rMid = (cellIn + cellOut)/2, halfH = (cellOut - cellIn)/2;
+  const halfW = STEP/2 * .9;
+  if (convPlaying) convTime += dt;
+
+  // Mantle
+  let gr = g.createRadialGradient(cx, cy, rCore, cx, cy, rCrust);
+  gr.addColorStop(0, '#f07a32'); gr.addColorStop(1, '#8f2c16');
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCrust, 0, Math.PI*2); g.fill();
+  // Core
+  gr = g.createRadialGradient(cx, cy, rInner*.3, cx, cy, rCore);
+  gr.addColorStop(0, '#fff6c8'); gr.addColorStop(.35, '#ffd25a'); gr.addColorStop(1, '#e8781f');
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCore, 0, Math.PI*2); g.fill();
+  // Core glow
+  gr = g.createRadialGradient(cx, cy, rCore*.9, cx, cy, rCore*1.25);
+  gr.addColorStop(0, 'rgba(255,220,120,.35)'); gr.addColorStop(1, 'rgba(255,220,120,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCore*1.25, 0, Math.PI*2); g.fill();
+
+  // Particles (streaks)
+  const pos = (c, t, k) => { const a = c.mid + halfW*k*Math.cos(t), r = rMid + halfH*k*Math.sin(t); return [cx + Math.cos(a)*r, cy + Math.sin(a)*r]; };
+  const speed = .55;
+  g.lineCap = 'round';
+  particles.forEach(p => {
+    const c = cells[p.ci];
+    if (convPlaying) p.t += c.dir * speed * dt;
+    const temp = .5 + .5 * Math.cos(p.t) * c.dir;
+    const [x1, y1] = pos(c, p.t, p.k), [x0, y0] = pos(c, p.t - c.dir*.22, p.k);
+    g.strokeStyle = lerpCol(COOL, HOT, temp); g.globalAlpha = .85; g.lineWidth = 2.4;
+    g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  });
+  g.globalAlpha = 1;
+  // Big arrowheads around each cell
+  cells.forEach(c => {
+    for (let j=0;j<4;j++){
+      const t = convTime * c.dir * speed + j * Math.PI/2;
+      const [x, y] = pos(c, t, .72), [xb, yb] = pos(c, t - c.dir*.05, .72);
+      const ang = Math.atan2(y - yb, x - xb), s = Math.max(9, R*.035);
+      g.fillStyle = 'rgba(255,255,255,.9)';
+      g.beginPath(); g.moveTo(x + Math.cos(ang)*s, y + Math.sin(ang)*s);
+      g.lineTo(x + Math.cos(ang+2.5)*s, y + Math.sin(ang+2.5)*s);
+      g.lineTo(x + Math.cos(ang-2.5)*s, y + Math.sin(ang-2.5)*s); g.closePath(); g.fill();
+    }
+  });
+
+  // Plates
+  const gapA = .035;
+  for (let k=0;k<N_CELLS;k++){
+    const a0 = bounds[k] + gapA, a1 = bounds[(k+1) % N_CELLS] + (k === N_CELLS-1 ? Math.PI*2 : 0) - gapA;
+    g.fillStyle = '#a87b52';
+    g.beginPath(); g.arc(cx, cy, R, a0, a1); g.arc(cx, cy, rCrust, a1, a0, true); g.closePath(); g.fill();
+    // moving tick marks show plate motion
+    const v = -cells[k].dir * speed * halfW * .5;  // angular speed of the plate surface
+    g.save(); g.beginPath(); g.arc(cx, cy, R, a0, a1); g.arc(cx, cy, rCrust, a1, a0, true); g.closePath(); g.clip();
+    g.strokeStyle = 'rgba(60,38,20,.55)'; g.lineWidth = 2;
+    const spacing = .06, off = ((convTime * v) % spacing + spacing) % spacing;
+    for (let a = a0 - spacing + off; a < a1 + spacing; a += spacing){
+      g.beginPath(); g.moveTo(cx + Math.cos(a)*rCrust, cy + Math.sin(a)*rCrust); g.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R); g.stroke();
+    }
+    g.restore();
+    // plate motion arrow outside the Earth
+    const am = (a0 + a1) / 2, ra = R + Math.max(16, R*.07), len = .22 * Math.sign(v);
+    g.strokeStyle = '#fff'; g.lineWidth = 3;
+    g.beginPath(); g.arc(cx, cy, ra, am - len/2, am + len/2, len < 0); g.stroke();
+    const ae = am + len/2, tx = cx + Math.cos(ae)*ra, ty = cy + Math.sin(ae)*ra, tang = ae + Math.sign(v)*Math.PI/2, s = 10;
+    g.fillStyle = '#fff'; g.beginPath(); g.moveTo(tx + Math.cos(tang)*s, ty + Math.sin(tang)*s);
+    g.lineTo(tx + Math.cos(tang+2.4)*s, ty + Math.sin(tang+2.4)*s); g.lineTo(tx + Math.cos(tang-2.4)*s, ty + Math.sin(tang-2.4)*s); g.closePath(); g.fill();
+  }
+  // Boundaries: magma at rising, sinking slab at sinking
+  bounds.forEach((b, k) => {
+    if (k % 2 === 0){
+      g.fillStyle = '#ffb347';
+      g.beginPath(); g.arc(cx, cy, R*.995, b - gapA, b + gapA); g.arc(cx, cy, rCrust*.97, b + gapA*.6, b - gapA*.6, true); g.closePath(); g.fill();
+    } else {
+      g.fillStyle = '#8a6342';
+      const d = R*.12, a = b - gapA*1.2;
+      g.beginPath();
+      g.moveTo(cx + Math.cos(b - gapA)*rCrust, cy + Math.sin(b - gapA)*rCrust);
+      g.lineTo(cx + Math.cos(b)*(rCrust - d), cy + Math.sin(b)*(rCrust - d));
+      g.lineTo(cx + Math.cos(b - gapA*.2)*(rCrust - d*.85), cy + Math.sin(b - gapA*.2)*(rCrust - d*.85));
+      g.lineTo(cx + Math.cos(b + gapA)*rCrust, cy + Math.sin(b + gapA)*rCrust); g.closePath(); g.fill();
+    }
+  });
+
+  if (!convLabels) return;
+  const fs = Math.max(14, Math.min(20, R*.06));
+  g.font = `600 ${fs}px system-ui,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const tag = (txt, x, y, col='#fff') => {
+    const tw = g.measureText(txt).width + 18;
+    g.fillStyle = 'rgba(5,7,13,.8)'; g.beginPath(); g.roundRect(x - tw/2, y - fs*.8, tw, fs*1.6, 8); g.fill();
+    g.fillStyle = col; g.fillText(txt, x, y);
+  };
+  tag('Core: heat source', cx, cy, '#ffd25a');
+  tag('Mantle', cx + Math.cos(cells[1].mid)*rMid, cy + Math.sin(cells[1].mid)*rMid);
+  const lr = R + Math.max(44, R*.17);
+  tag('Plates move apart', cx + Math.cos(bounds[0])*lr, cy + Math.sin(bounds[0])*lr, '#7ee2a8');
+  tag('Plates move together', cx + Math.cos(bounds[1])*lr + 40, cy + Math.sin(bounds[1])*lr, '#ff8a8a');
+  tag('Hot rock rises', cx + Math.cos(bounds[2])*rMid, cy + Math.sin(bounds[2])*rMid, '#fff1a8');
+  tag('Cooler rock sinks', cx + Math.cos(bounds[3])*rMid, cy + Math.sin(bounds[3])*rMid, '#9cc9ff');
+}
+
+/* ---------------- Loop ---------------- */
+function resize(){
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // Shift the globe left of the info card on wide screens
+  camera.setViewOffset(w, h, w > 900 ? 120 : 0, w > 900 ? 0 : h * .08, w, h);
+  camera.zoom = w < 800 ? .62 : 1;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (current === 'layers'){
+    controls.update();
+    sun.position.copy(camera.position).add(new THREE.Vector3(1, 2, 0));
+    renderer.render(scene, camera);
+    placeLabels();
+  } else if (current === 'conv') drawConvection(dt);
+  requestAnimationFrame(frame);
+}
+resize(); select(0); drawLabels();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

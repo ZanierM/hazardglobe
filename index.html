@@ -15,6 +15,8 @@
   --font: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
+.xlink{display:block;margin:6px 0 2px;font-size:13px;color:var(--accent);text-decoration:none}
+.xlink:hover{text-decoration:underline}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
 #map{position:absolute;inset:0}
 .panel{background:var(--panel);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:14px}
@@ -159,6 +161,7 @@ body.classroom .kv b{font-size:22px}
   <header class="panel">
     <h1>Hazard <span>Globe</span></h1>
     <div class="sub" id="subtitle">Tropical storms and earthquakes happening around the world right now.</div>
+    <a class="xlink" href="earth.html">Inside the Earth: layers, convection and crust →</a>
     <div class="tabs" role="tablist">
       <button id="mLive" class="on" role="tab">Live now</button>
       <button id="mCases" role="tab">Case studies</button>
