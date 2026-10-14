@@ -6,15 +6,15 @@
 <title>Inside the Earth</title>
 <style>
 :root{
-  --bg:#05070d; --panel:rgba(12,17,28,.9); --line:rgba(255,255,255,.12); --soft:rgba(255,255,255,.06);
+  --bg:#03050a; --panel:rgba(10,14,24,.86); --line:rgba(255,255,255,.12); --soft:rgba(255,255,255,.06);
   --text:#e8edf5; --muted:#9aa7bc; --accent:#5ebaff;
-  --crust:#a87b52; --mantle:#e0582a; --outer:#f39a2b; --inner:#ffd96a;
+  --crust:#9c7b5e; --mantle:#d9531f; --outer:#f39a2b; --inner:#ffe08a;
   --font: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
 button{font:inherit;color:inherit}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(8px)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(10px)}
 
 header{position:fixed;top:14px;left:14px;right:14px;z-index:10;display:flex;align-items:center;gap:18px;padding:10px 16px;flex-wrap:wrap}
 header h1{margin:0;font-size:24px;font-weight:700;letter-spacing:.2px}
@@ -33,7 +33,7 @@ header a:hover{color:var(--text)}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
 #labels{position:absolute;inset:0;pointer-events:none}
 .lab{position:absolute;transform:translate(-50%,-50%);padding:6px 12px;border-radius:999px;font-size:18px;font-weight:600;white-space:nowrap;
-  background:rgba(5,7,13,.78);border:2px solid var(--c);color:#fff;pointer-events:auto;cursor:pointer;transition:opacity .2s}
+  background:rgba(3,5,10,.72);border:2px solid var(--c);color:#fff;pointer-events:auto;cursor:pointer;transition:opacity .25s;box-shadow:0 2px 10px rgba(0,0,0,.5)}
 .lab.num{width:38px;height:38px;padding:0;display:grid;place-items:center;font-size:20px}
 .lab.sel{background:var(--c);color:#111}
 
@@ -67,7 +67,7 @@ header a:hover{color:var(--text)}
 #convSide .row{display:flex;gap:8px;margin-top:14px}
 #convSide .row button{flex:1;border:1px solid var(--line);background:var(--soft);padding:9px;border-radius:10px;cursor:pointer;font-size:15px}
 .key{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--muted);margin-top:12px}
-.key span{display:inline-block;width:90px;height:10px;border-radius:5px;background:linear-gradient(90deg,#4d9fff,#fff1a8)}
+.key span{display:inline-block;width:110px;height:10px;border-radius:5px;background:linear-gradient(90deg,#3a0e06,#8f2a10,#e0601e,#ffd27a)}
 
 /* ---------- Crust ---------- */
 #crust{overflow:auto}
@@ -87,12 +87,12 @@ header a:hover{color:var(--text)}
   header h1{font-size:20px}
   .tabs button{font-size:15px;padding:8px 10px}
   #layerList{top:auto;bottom:14px;width:auto;right:14px;flex-direction:row;flex-wrap:wrap}
+  #layerList button{padding:7px 10px;font-size:15px}
   #layerList .hint,#scaleNote{display:none}
   #info{top:auto;bottom:146px;padding:12px 14px}
   #info h2{font-size:24px}
   #info dl{font-size:15px;gap:6px 10px}
   #info .fact,#info .depth{display:none}
-  #layerList button{padding:7px 10px;font-size:15px}
   #convSide{top:auto;bottom:14px;max-height:45vh;overflow:auto}
   .cols{font-size:15px}
 }
@@ -138,7 +138,7 @@ header a:hover{color:var(--text)}
       <li>This circular movement drags the plates above it. Where currents rise, plates move apart. Where they sink, plates move together.</li>
     </ol>
     <div class="key"><span></span> cooler → hotter rock</div>
-    <div class="note">Much of the core's heat comes from the decay of radioactive elements. Scientists now think plates are also pushed and pulled by their own weight: <b>ridge push</b> at spreading ridges and <b>slab pull</b> where a plate sinks.</div>
+    <div class="note">Much of the core's heat comes from the decay of radioactive elements. Scientists now think plates are also pushed and pulled by their own weight: <b>ridge push</b> at mid-ocean ridges and <b>slab pull</b> where a plate sinks. The stripes on the ocean floor record changes in Earth's magnetic field as new rock forms at the ridge.</div>
     <div class="row">
       <button id="cPlay">Pause</button>
       <button id="cLab">Hide labels</button>
@@ -149,43 +149,66 @@ header a:hover{color:var(--text)}
 <!-- ============ CRUST ============ -->
 <section id="crust" class="view">
   <div class="wrap">
-    <svg viewBox="0 0 1000 380" role="img" aria-label="Cross-section comparing thick continental crust with thin oceanic crust">
+    <svg viewBox="0 0 1000 400" role="img" aria-label="Cross-section comparing thick continental crust with thin oceanic crust">
       <defs>
-        <linearGradient id="gMantle" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c2461f"/><stop offset="1" stop-color="#e9732f"/></linearGradient>
-        <linearGradient id="gSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c74c9"/><stop offset="1" stop-color="#123f7a"/></linearGradient>
-        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1a2e"/><stop offset="1" stop-color="#16304f"/></linearGradient>
-        <pattern id="pGranite" width="22" height="22" patternUnits="userSpaceOnUse">
-          <rect width="22" height="22" fill="#cfa881"/><circle cx="5" cy="6" r="1.8" fill="#8a6a50"/><circle cx="15" cy="14" r="1.5" fill="#f1dcc4"/><circle cx="17" cy="4" r="1.2" fill="#6b5240"/><circle cx="7" cy="17" r="1.3" fill="#e9cfb2"/>
-        </pattern>
-        <pattern id="pBasalt" width="16" height="16" patternUnits="userSpaceOnUse">
-          <rect width="16" height="16" fill="#4d5966"/><circle cx="4" cy="5" r="1" fill="#2f3842"/><circle cx="11" cy="11" r="1" fill="#6a7684"/>
-        </pattern>
+        <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d8fc4"/><stop offset=".7" stop-color="#a9c8e4"/><stop offset="1" stop-color="#d6e4ef"/></linearGradient>
+        <linearGradient id="gSea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a78b8"/><stop offset=".4" stop-color="#14508a"/><stop offset="1" stop-color="#082a4f"/></linearGradient>
+        <linearGradient id="gLith" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e4a3a"/><stop offset="1" stop-color="#8a3c22"/></linearGradient>
+        <linearGradient id="gAsth" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8401c"/><stop offset="1" stop-color="#e2672a"/></linearGradient>
+        <linearGradient id="gGranite" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c8a07c"/><stop offset="1" stop-color="#8f6b52"/></linearGradient>
+        <linearGradient id="gBasalt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#55606b"/><stop offset="1" stop-color="#2e353d"/></linearGradient>
+        <filter id="fGrain" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="n"/>
+          <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+          <feComponentTransfer in="g" result="g2"><feFuncA type="linear" slope=".35"/></feComponentTransfer>
+          <feComposite in="g2" in2="SourceGraphic" operator="in" result="m"/>
+          <feBlend in="SourceGraphic" in2="m" mode="multiply"/>
+        </filter>
+        <filter id="fStrata" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency=".004 .09" numOctaves="3" seed="9" result="n"/>
+          <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+          <feComponentTransfer in="g" result="g2"><feFuncA type="linear" slope=".45"/></feComponentTransfer>
+          <feComposite in="g2" in2="SourceGraphic" operator="in" result="m"/>
+          <feBlend in="SourceGraphic" in2="m" mode="multiply"/>
+        </filter>
+        <clipPath id="cpAll"><rect width="1000" height="400" rx="14"/></clipPath>
       </defs>
-      <rect width="1000" height="380" fill="url(#gSky)"/>
-      <!-- mantle -->
-      <rect y="200" width="1000" height="180" fill="url(#gMantle)"/>
-      <!-- sea -->
-      <path d="M520 120 L1000 120 L1000 205 L640 205 C600 205 580 160 545 128 Z" fill="url(#gSea)"/>
-      <!-- oceanic crust -->
-      <path d="M560 205 L1000 205 L1000 238 L600 238 Z" fill="url(#pBasalt)"/>
-      <!-- continental crust: mountains on top, deep root below -->
-      <path d="M0 112 L120 110 L170 70 L205 92 L240 48 L280 84 L320 62 L360 104 L470 110 L520 120 L545 128 C580 160 600 205 640 205 L600 238 C560 238 520 260 470 262 L380 300 L250 330 L140 300 L0 280 Z" fill="url(#pGranite)"/>
-      <path d="M240 48 L228 60 L252 60 Z" fill="#f4f7fb"/>
-      <!-- thickness arrows -->
-      <g stroke="#fff" stroke-width="2" fill="#fff">
-        <line x1="70" y1="120" x2="70" y2="276"/><path d="M64 128 L70 116 L76 128Z"/><path d="M64 268 L70 280 L76 268Z"/>
-        <line x1="880" y1="209" x2="880" y2="234"/><path d="M875 214 L880 205 L885 214Z"/><path d="M875 229 L880 238 L885 229Z"/>
-      </g>
-      <g font-family="system-ui,sans-serif" fill="#fff">
-        <text x="84" y="205" font-size="19" font-weight="700">30–70 km</text>
-        <text x="894" y="228" font-size="19" font-weight="700">5–10 km</text>
-        <text x="220" y="190" font-size="24" font-weight="700" fill="#2a1d12">Continental crust</text>
-        <text x="220" y="216" font-size="18" fill="#3b2a1b">granite · less dense · older</text>
-        <text x="690" y="270" font-size="24" font-weight="700">Oceanic crust</text>
-        <text x="690" y="294" font-size="18" fill="#ffe3d1">basalt · denser · younger</text>
-        <text x="760" y="168" font-size="22" font-weight="600" fill="#cfe5ff">Ocean</text>
-        <text x="420" y="355" font-size="22" font-weight="600" fill="#ffe3d1">Mantle</text>
-        <text x="990" y="370" font-size="13" text-anchor="end" fill="#ffe3d1">Not to scale</text>
+      <g clip-path="url(#cpAll)">
+        <rect width="1000" height="400" fill="url(#gSky)"/>
+        <!-- asthenosphere and lithospheric mantle -->
+        <rect y="250" width="1000" height="150" fill="url(#gAsth)" filter="url(#fGrain)"/>
+        <path d="M0 300 C150 320 300 330 420 318 C560 300 640 262 1000 268 L1000 250 L0 250 Z" fill="url(#gLith)"/>
+        <path d="M0 300 C150 320 300 330 420 318 C560 300 640 262 1000 268 L1000 160 L0 160 Z" fill="url(#gLith)" filter="url(#fGrain)"/>
+        <!-- ocean -->
+        <path d="M500 128 L1000 128 L1000 214 L650 214 C610 212 585 180 548 140 Z" fill="url(#gSea)"/>
+        <!-- oceanic crust with thin sediment on top -->
+        <path d="M575 214 L1000 214 L1000 246 L612 246 Z" fill="url(#gBasalt)" filter="url(#fGrain)"/>
+        <path d="M600 210 C700 211 850 209 1000 210 L1000 216 L600 216 Z" fill="#7d725f"/>
+        <!-- continental crust -->
+        <path id="cont" d="M0 118 L60 116 L110 108 L140 86 L162 94 L186 66 L204 78 L226 40 L246 62 L262 52 L288 82 L314 70 L338 98 L380 108 L440 114 L500 128 L548 140 C585 180 610 212 650 214 L612 246 C570 248 530 262 470 268 L400 292 L300 318 L230 326 L150 308 L0 290 Z" fill="url(#gGranite)" filter="url(#fStrata)"/>
+        <!-- vegetation, coast and snow -->
+        <path d="M0 118 L60 116 L110 108 L140 86 L162 94 L186 66 L204 78 L226 40 L246 62 L262 52 L288 82 L314 70 L338 98 L380 108 L440 114 L500 128 L548 140" fill="none" stroke="#5a7a3a" stroke-width="5" stroke-linejoin="round"/>
+        <path d="M226 40 L216 52 L222 51 L229 56 L236 50 Z M186 66 L180 74 L190 73 Z M262 52 L256 60 L266 60 Z" fill="#f7fbff"/>
+        <!-- Moho -->
+        <path d="M0 290 L150 308 L230 326 L300 318 L400 292 L470 268 C530 262 570 248 612 246 L1000 246" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="6 5" opacity=".8"/>
+        <!-- thickness arrows -->
+        <g stroke="#fff" stroke-width="2.2" fill="#fff">
+          <line x1="70" y1="124" x2="70" y2="286"/><path d="M64 132 L70 120 L76 132Z"/><path d="M64 280 L70 292 L76 280Z"/>
+          <line x1="890" y1="218" x2="890" y2="242"/><path d="M885 223 L890 214 L895 223Z"/><path d="M885 237 L890 246 L895 237Z"/>
+        </g>
+        <g font-family="system-ui,sans-serif" fill="#fff" style="paint-order:stroke" stroke="rgba(0,0,0,.45)" stroke-width="3">
+          <text x="84" y="212" font-size="19" font-weight="700">30–70 km</text>
+          <text x="904" y="236" font-size="19" font-weight="700">5–10 km</text>
+          <text x="230" y="196" font-size="24" font-weight="700">Continental crust</text>
+          <text x="230" y="222" font-size="18">granite · less dense · older</text>
+          <text x="660" y="237" font-size="20" font-weight="700">Oceanic crust</text>
+          <text x="660" y="276" font-size="18">basalt · denser · younger</text>
+          <text x="770" y="176" font-size="22" font-weight="600">Ocean</text>
+          <text x="980" y="205" font-size="14" text-anchor="end">sediment</text>
+          <text x="760" y="376" font-size="20" font-weight="600">Mantle</text>
+          <text x="480" y="345" font-size="14" opacity=".9">Moho (base of the crust)</text>
+          <text x="990" y="392" font-size="13" text-anchor="end" stroke-width="2">Not to scale</text>
+        </g>
       </g>
     </svg>
 
@@ -211,6 +234,10 @@ header a:hover{color:var(--text)}
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ---------------- Tabs ---------------- */
 const tabs = document.querySelectorAll('.tabs button');
@@ -224,27 +251,28 @@ function show(v){
 }
 
 /* ---------------- Layer data ---------------- */
-// Radii as a fraction of Earth's radius (6,371 km). Crust exaggerated for visibility.
+// Radii as a fraction of Earth's radius (6,371 km). Crust drawn thicker than real.
+const R_IC = .191, R_OC = .546, R_MOHO = .955;
 const LAYERS = [
-  { id:'crust', name:'Crust', css:'--crust', r0:.94, r1:1, cIn:'#7a5636', cOut:'#b98c5f',
+  { name:'Crust', css:'--crust', r:.978,
     depth:'0 to 70 km deep',
     temp:'Up to about 1,000°C at its base',
     state:'Solid rock',
     made:'Granite (continental) and basalt (oceanic)',
     fact:'The crust is broken into large pieces called tectonic plates. If the Earth were an apple, the crust would be thinner than its skin.' },
-  { id:'mantle', name:'Mantle', css:'--mantle', r0:.546, r1:.94, cIn:'#f07a32', cOut:'#a83419',
+  { name:'Mantle', css:'--mantle', r:.75,
     depth:'70 to 2,900 km deep',
     temp:'About 1,000°C to 3,700°C',
     state:'Mostly solid, but hot enough to flow very slowly',
     made:'Rock rich in iron and magnesium',
     fact:'The thickest layer, making up about 84% of Earth\'s volume. The soft upper mantle is what the plates move over.' },
-  { id:'outer', name:'Outer core', css:'--outer', r0:.191, r1:.546, cIn:'#ffc145', cOut:'#e8781f',
+  { name:'Outer core', css:'--outer', r:.37,
     depth:'2,900 to 5,150 km deep',
     temp:'About 4,000°C to 5,000°C',
     state:'Liquid',
     made:'Iron and nickel',
     fact:'Liquid iron moving around in the outer core creates Earth\'s magnetic field.' },
-  { id:'inner', name:'Inner core', css:'--inner', r0:0, r1:.191, cIn:'#fffbe0', cOut:'#ffd25a',
+  { name:'Inner core', css:'--inner', r:.1,
     depth:'5,150 to 6,371 km deep (the centre)',
     temp:'About 5,400°C, as hot as the surface of the Sun',
     state:'Solid',
@@ -258,101 +286,202 @@ const canvas = document.getElementById('gl');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(38, 1, .1, 100);
-camera.position.set(-2.6, 1.35, -2.6);
+const camera = new THREE.PerspectiveCamera(36, 1, .1, 200);
+camera.position.set(-2.55, 1.55, -2.55);
 
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.enablePan = false;
-controls.minDistance = 2.2;
+controls.minDistance = 2.1;
 controls.maxDistance = 7;
 controls.autoRotate = true;
-controls.autoRotateSpeed = .6;
+controls.autoRotateSpeed = .5;
 
-scene.add(new THREE.AmbientLight(0xffffff, .55));
-const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .42, .5, .85);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+scene.add(new THREE.AmbientLight(0x8899bb, .35));
+const sun = new THREE.DirectionalLight(0xfff4e6, 2.6);
 scene.add(sun);
 
-// Stars
+// Stars with slight colour variation
 {
-  const g = new THREE.BufferGeometry(), n = 1500, p = new Float32Array(n*3);
-  for (let i=0;i<n;i++){ const v = new THREE.Vector3().randomDirection().multiplyScalar(30+Math.random()*20); p.set([v.x,v.y,v.z], i*3); }
-  g.setAttribute('position', new THREE.BufferAttribute(p,3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color:0xffffff, size:.08, transparent:true, opacity:.7 })));
+  const g = new THREE.BufferGeometry(), n = 3000, p = new Float32Array(n*3), c = new Float32Array(n*3);
+  for (let i=0;i<n;i++){
+    const v = new THREE.Vector3().randomDirection().multiplyScalar(60 + Math.random()*40); p.set([v.x,v.y,v.z], i*3);
+    const t = Math.random(), b = .5 + Math.random()*.5; c.set(t < .15 ? [b,.8*b,.6*b] : t < .3 ? [.7*b,.8*b,b] : [b,b,b], i*3);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p,3)); g.setAttribute('color', new THREE.BufferAttribute(c,3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size:.18, vertexColors:true, transparent:true, opacity:.85, sizeAttenuation:true })));
 }
 
 const earth = new THREE.Group();
+earth.rotation.z = THREE.MathUtils.degToRad(-23.4) * 0;   // axis kept upright so the cut stays readable
 scene.add(earth);
+
+// GLSL noise shared by the shaders
+const NOISE = `
+float hash(vec3 p){ p = fract(p*.3183099 + .1); p *= 17.; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float noise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f*f*(3.-2.*f);
+  return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x), mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x), mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y), f.z); }
+float fbm(vec3 p){ float v = 0., a = .5; for (int i=0;i<5;i++){ v += a*noise(p); p = p*2.02 + vec3(1.7,9.2,3.1); a *= .5; } return v; }
+vec2 vor(vec3 p){ vec3 i = floor(p), f = fract(p); float d1 = 8., d2 = 8.;
+  for (int x=-1;x<=1;x++) for (int y=-1;y<=1;y++){ vec3 g = vec3(float(x),float(y),0.);
+    vec3 o = vec3(hash(i+g), hash(i+g+19.1), 0.); float d = length(g + o - f);
+    if (d < d1){ d2 = d1; d1 = d; } else if (d < d2) d2 = d; }
+  return vec2(d1, d2); }
+vec3 toLin(vec3 c){ return pow(c, vec3(2.2)); }
+`;
 
 // Outer surface with a quarter wedge removed (the gap faces the -x/-z quadrant)
 const PHI_LEN = Math.PI * 1.5;
-const surfGeo = new THREE.SphereGeometry(1, 128, 96, 0, PHI_LEN);
-{ const uv = surfGeo.attributes.uv; for (let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i) * PHI_LEN / (Math.PI*2)); }
-const surfMat = new THREE.MeshStandardMaterial({ color:0x2d5a8a, roughness:.85, metalness:0 });
-new THREE.TextureLoader().load('img/earth.jpg', t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; surfMat.map = t; surfMat.color.set(0xffffff); surfMat.needsUpdate = true; });
-const surface = new THREE.Mesh(surfGeo, surfMat);
-surface.userData.layer = 0;
+function wedgeSphere(r, w, h){
+  const g = new THREE.SphereGeometry(r, w, h, 0, PHI_LEN);
+  const uv = g.attributes.uv; for (let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i) * PHI_LEN / (Math.PI*2));
+  return g;
+}
+const loader = new THREE.TextureLoader();
+const surfMat = new THREE.MeshPhongMaterial({ color:0x2d5a8a, shininess:18, specular:new THREE.Color(0x333333), bumpScale:4 });
+loader.load('img/earth.jpg', t => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; surfMat.map = t; surfMat.color.set(0xffffff); surfMat.needsUpdate = true; });
+loader.load('img/earth-bump.png', t => { surfMat.bumpMap = t; surfMat.needsUpdate = true; });
+loader.load('img/earth-water.png', t => { surfMat.specularMap = t; surfMat.specular.set(0x6a7f99); surfMat.needsUpdate = true; });
+const surface = new THREE.Mesh(wedgeSphere(1, 160, 120), surfMat);
 earth.add(surface);
 
-// Cut faces: a half-ring for each layer on each of the two cut planes
-const FACE_DIRS = [ { a:Math.PI, d:new THREE.Vector3(-1,0,0), n:new THREE.Vector3(0,0,-1) },
-                    { a:Math.PI/2, d:new THREE.Vector3(0,0,-1), n:new THREE.Vector3(-1,0,0) } ];
-const faceMeshes = [];
-LAYERS.forEach((L, li) => {
-  const cIn = new THREE.Color(L.cIn), cOut = new THREE.Color(L.cOut);
-  FACE_DIRS.forEach(F => {
-    const g = new THREE.RingGeometry(Math.max(L.r0, .0001), L.r1, 96, 8, -Math.PI/2, Math.PI);
-    const pos = g.attributes.position, cols = new Float32Array(pos.count*3), c = new THREE.Color();
-    for (let i=0;i<pos.count;i++){
-      const r = Math.hypot(pos.getX(i), pos.getY(i));
-      const t = L.r1 === L.r0 ? 0 : (r - L.r0) / (L.r1 - L.r0);
-      c.copy(cIn).lerp(cOut, t); cols.set([c.r,c.g,c.b], i*3);
-    }
-    g.setAttribute('color', new THREE.BufferAttribute(cols,3));
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors:true, side:THREE.DoubleSide }));
-    m.rotation.y = F.a;
-    m.userData.layer = li;
-    earth.add(m);
-    faceMeshes.push(m);
-  });
-  // Thin boundary line on each face
-  FACE_DIRS.forEach(F => {
-    if (L.r0 <= 0) return;
-    const pts = [];
-    for (let k=0;k<=64;k++){ const th = -Math.PI/2 + Math.PI*k/64; pts.push(new THREE.Vector3(Math.cos(th)*L.r0, Math.sin(th)*L.r0, 0)); }
-    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x000000, transparent:true, opacity:.35 }));
-    line.rotation.y = F.a; line.position.addScaledVector(F.n, .001);
-    earth.add(line);
-  });
+// Clouds (procedural, drift slowly)
+const cloudMat = new THREE.ShaderMaterial({
+  transparent:true, depthWrite:false,
+  uniforms:{ uTime:{value:0}, uSun:{value:new THREE.Vector3(1,0,0)} },
+  vertexShader:`varying vec3 vP; varying vec3 vN; void main(){ vP = position; vN = normalize((modelMatrix*vec4(normal,0.)).xyz);
+    gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader: NOISE + `uniform float uTime; uniform vec3 uSun; varying vec3 vP; varying vec3 vN;
+    void main(){
+      vec3 p = vP*4.2; float lat = abs(vP.y);
+      vec3 q = vec3(p.x*cos(uTime*.01) - p.z*sin(uTime*.01), p.y*1.6, p.x*sin(uTime*.01) + p.z*cos(uTime*.01));
+      float n = fbm(q + fbm(q*1.5)*1.2);
+      float band = .64 - .05*smoothstep(.45,.75,lat) + .06*smoothstep(.15,.3,lat)*(1.-smoothstep(.3,.45,lat));
+      float a = smoothstep(band, band+.16, n) * .75;
+      float light = clamp(dot(vN, normalize(uSun)), 0., 1.)*.9 + .12;
+      gl_FragColor = vec4(vec3(light), a);
+      #include <colorspace_fragment>
+    }`
 });
+earth.add(new THREE.Mesh(wedgeSphere(1.008, 128, 96), cloudMat));
 
-// Highlight overlay: a bright outline drawn around the selected layer on both faces
-const hlGroup = new THREE.Group(); earth.add(hlGroup);
-function buildHighlight(li){
-  hlGroup.clear();
-  const L = LAYERS[li];
-  FACE_DIRS.forEach(F => {
-    const g = new THREE.RingGeometry(Math.max(L.r0,.0001), L.r1, 96, 1, -Math.PI/2, Math.PI);
-    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false }));
-    m.rotation.y = F.a; m.position.addScaledVector(F.n, .002);
-    hlGroup.add(m);
+// Atmosphere glow
+const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.018, 96, 64), new THREE.ShaderMaterial({
+  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  vertexShader:`varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+  fragmentShader:`varying vec3 vN; varying vec3 vV; void main(){ float i = pow(1. - clamp(dot(vN, vV), 0., 1.), 6.); gl_FragColor = vec4(vec3(.3,.55,1.)*i*1.1, 1.); }`
+}));
+earth.add(atmo);
+
+// Cut faces: one half-disc per cut plane, shaded procedurally
+const FACE_DIRS = [ { a:Math.PI,   d:new THREE.Vector3(-1,0,0), n:new THREE.Vector3(0,0,-1), seed:1.3 },
+                    { a:Math.PI/2, d:new THREE.Vector3(0,0,-1), n:new THREE.Vector3(-1,0,0), seed:7.9 } ];
+const faceUniforms = [];
+const faceMeshes = FACE_DIRS.map(F => {
+  const u = { uTime:{value:0}, uSel:{value:-1}, uSeed:{value:F.seed} };
+  faceUniforms.push(u);
+  const mat = new THREE.ShaderMaterial({
+    side:THREE.DoubleSide, uniforms:u,
+    vertexShader:`varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader: NOISE + `
+      uniform float uTime, uSel, uSeed; varying vec2 vP;
+      void main(){
+        float r = length(vP), th = atan(vP.y, vP.x);
+        vec3 P = vec3(vP*3., uSeed);
+        // Uneven boundaries
+        float rIC = ${R_IC.toFixed(3)} + (fbm(vec3(th*3., 1., uSeed)) - .5)*.008;
+        float rOC = ${R_OC.toFixed(3)} + (fbm(vec3(th*2.5, 3., uSeed)) - .5)*.016;
+        float cont = smoothstep(.48, .6, fbm(vec3(th*1.3, 7., uSeed)));
+        float rM = mix(.972, .935, cont) + (fbm(vec3(th*12., 5., uSeed)) - .5)*.01;
+        float layer = r < rIC ? 3. : r < rOC ? 2. : r < rM ? 1. : 0.;
+        vec3 col; float glow = 0.;
+
+        if (layer > 2.5){
+          // Inner core: solid iron crystals, white hot
+          vec2 v = vor(vec3(vP*70., uSeed));
+          float edge = smoothstep(.0, .08, v.y - v.x);
+          float t = r / rIC;
+          float shimmer = fbm(vec3(vP*30., uTime*.15));
+          col = mix(vec3(1.,.98,.9), vec3(1.,.84,.45), t*t) * (.9 + .1*edge) * (.94 + .12*shimmer);
+          glow = 2.1 - t*.9;
+        } else if (layer > 1.5){
+          // Outer core: liquid iron, swirling flow
+          float t = (r - rIC) / (rOC - rIC);
+          vec3 q = vec3(vP*5., uSeed);
+          float w = fbm(q + vec3(uTime*.04, -uTime*.03, 0.));
+          float f = fbm(vec3(th*5. + w*2.2 - uTime*.05, r*9. + w, uSeed));
+          float s = fbm(vec3(vP*26., uTime*.08));
+          col = mix(vec3(.86,.28,.04), vec3(1.,.72,.24), smoothstep(.3,.75,f));
+          col = mix(col, vec3(1.,.9,.6), smoothstep(.62,.8,s)*.35);
+          glow = mix(1.45, 1.0, t);
+        } else if (layer > .5){
+          // Mantle: hot at the base, cooler near the crust, rising plumes and sinking slabs
+          float t = clamp((r - rOC) / (rM - rOC), 0., 1.);
+          float plume = fbm(vec3(th*7., r*1.8 - uTime*.006, uSeed*2.));
+          float detail = fbm(vec3(vP*40., uSeed));
+          float grain = noise(vec3(vP*420., uSeed));
+          vec3 hot = vec3(.95,.42,.1), mid = vec3(.68,.2,.06), cool = vec3(.33,.1,.05);
+          col = t < .5 ? mix(hot, mid, t*2.) : mix(mid, cool, (t-.5)*2.);
+          col *= .62 + .7*plume;
+          col *= .85 + .3*detail;
+          col *= .93 + .14*grain;
+          // Lower-upper mantle transition (~660 km) and soft asthenosphere below the crust
+          col *= 1. - .18*(1. - smoothstep(0., .004, abs(r - .896)));
+          col += vec3(.25,.07,.0) * smoothstep(rM - .05, rM - .012, r) * (1. - smoothstep(rM - .012, rM, r));
+          // Thin hot layer at the core-mantle boundary
+          col += vec3(.35,.12,.02) * (1. - smoothstep(0., .03, r - rOC));
+          glow = 1.;
+        } else {
+          // Crust: layered rock, granite (continents) or basalt (oceans)
+          float s = fbm(vec3(th*60., r*220., uSeed));
+          vec3 granite = mix(vec3(.52,.4,.32), vec3(.72,.58,.46), s);
+          vec3 basalt  = mix(vec3(.2,.21,.23), vec3(.33,.34,.36), s);
+          col = mix(basalt, granite, cont);
+          col *= .9 + .2*noise(vec3(vP*600., uSeed));
+          col = mix(col, vec3(.3,.42,.22), smoothstep(.993, .999, r) * cont);   // soil and plants on land
+          col = mix(col, vec3(.1,.28,.5), smoothstep(.993, .999, r) * (1. - cont)); // ocean on top
+          glow = 1.;
+        }
+        // Dark lines at each boundary
+        float lw = .0025;
+        col *= .65 + .35*smoothstep(0., lw, abs(r - rIC));
+        col *= .65 + .35*smoothstep(0., lw, abs(r - rOC));
+        col *= .6 + .4*smoothstep(0., lw*.8, abs(r - rM));
+        col *= .6 + .4*smoothstep(.996, .99, r);
+        // Highlight the selected layer, dim the rest
+        float sel = uSel < -.5 ? 1. : (abs(layer - uSel) < .5 ? 1. : 0.);
+        col *= mix(.6, 1.0, sel);
+        if (uSel > -.5 && sel > .5) col *= 1.12;
+        glow = mix(min(glow, 1.), glow, sel);
+        gl_FragColor = vec4(toLin(col) * glow, 1.);
+      }`
   });
-}
+  const m = new THREE.Mesh(new THREE.CircleGeometry(1, 192, -Math.PI/2, Math.PI), mat);
+  m.rotation.y = F.a;
+  earth.add(m);
+  return m;
+});
 
 /* ---------------- Labels ---------------- */
 const labelsEl = document.getElementById('labels');
-let showNames = true, selected = 0, revealed = true;
+let showNames = true, selected = -1, revealed = true;
 const anchors = LAYERS.map((L, i) => {
-  const r = L.r0 === 0 ? .1 : (L.r0 + L.r1) / 2;
   const el = document.createElement('div');
   el.className = 'lab';
   el.style.setProperty('--c', cssVal(L.css));
   el.onclick = () => select(i);
   labelsEl.appendChild(el);
-  // Angle on the cut face for each label, spread so they don't overlap
-  const th = [.6, .3, -.35, -1.25][i];
-  return { el, r, th };
+  return { el, r:L.r, th:[.62, .3, -.4, -1.25][i] };
 });
 function drawLabels(){
   anchors.forEach((A, i) => {
@@ -365,7 +494,6 @@ const tmp = new THREE.Vector3(), camLocal = new THREE.Vector3();
 function placeLabels(){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   camLocal.copy(camera.position); earth.worldToLocal(camLocal);
-  // Pick the cut face that faces the camera most
   const F = FACE_DIRS.reduce((best, f) => f.n.dot(camLocal) > best.n.dot(camLocal) ? f : best);
   const facing = F.n.dot(camLocal) > .15;
   anchors.forEach(A => {
@@ -392,7 +520,7 @@ const listBtns = LAYERS.map((L, i) => {
 function select(i){
   selected = i;
   revealed = showNames;
-  buildHighlight(i);
+  faceUniforms.forEach(u => u.uSel.value = i);
   renderInfo(); drawLabels(); updateList();
 }
 function updateList(){
@@ -402,6 +530,7 @@ function updateList(){
   });
 }
 function renderInfo(){
+  if (selected < 0){ infoEl.style.setProperty('--c', 'var(--accent)'); infoEl.innerHTML = `<h2>The Earth's layers</h2><div class="depth">6,371 km from the surface to the centre</div><div class="fact" style="border:0;padding:0;margin:0">Click a layer, or press 1–4, to find out about it. Drag to turn the Earth.</div>`; return; }
   const L = LAYERS[selected];
   infoEl.style.setProperty('--c', cssVal(L.css));
   const title = revealed ? L.name : 'Layer ' + (selected+1);
@@ -432,139 +561,266 @@ addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'l') document.getElementById('tLabels').click();
 });
 
-// Click to select a layer
+// Click to select a layer (by distance from the centre)
 const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
 let downAt = null;
 canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
 canvas.addEventListener('pointerup', e => {
   if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
-  const r = canvas.getBoundingClientRect();
-  mouse.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  const rc = canvas.getBoundingClientRect();
+  mouse.set((e.clientX - rc.left) / rc.width * 2 - 1, -(e.clientY - rc.top) / rc.height * 2 + 1);
   ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObjects([surface, ...faceMeshes])[0];
-  if (hit) select(hit.object.userData.layer);
+  if (!hit) return;
+  if (hit.object === surface) return select(0);
+  const r = earth.worldToLocal(hit.point.clone()).length();
+  select(r < R_IC ? 3 : r < R_OC ? 2 : r < R_MOHO ? 1 : 0);
 });
 
-/* ---------------- Convection (2D canvas) ---------------- */
-const cv = document.getElementById('cv'), cx2 = cv.getContext('2d');
+/* ================= Convection (2D canvas) ================= */
+const cv = document.getElementById('cv'), g = cv.getContext('2d');
 let convPlaying = true, convLabels = true, convTime = 0;
 document.getElementById('cPlay').onclick = e => { convPlaying = !convPlaying; e.currentTarget.textContent = convPlaying ? 'Pause' : 'Play'; };
 document.getElementById('cLab').onclick = e => { convLabels = !convLabels; e.currentTarget.textContent = convLabels ? 'Hide labels' : 'Show labels'; };
 
+// Value noise for the static textures
+const hash2 = (x, y) => { let h = (Math.imul(x|0, 374761393) + Math.imul(y|0, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+function vnoise(x, y){ const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf*xf*(3-2*xf), v = yf*yf*(3-2*yf);
+  const a = hash2(xi,yi), b = hash2(xi+1,yi), c = hash2(xi,yi+1), d = hash2(xi+1,yi+1); return a + (b-a)*u + (c-a)*v + (a-b-c+d)*u*v; }
+function fbm2(x, y, o = 4){ let s = 0, a = .5; for (let i=0;i<o;i++){ s += a*vnoise(x,y); x = x*2.03 + 17.1; y = y*2.03 + 3.7; a *= .5; } return s; }
+
 const N_CELLS = 6, STEP = Math.PI * 2 / N_CELLS;
-const bounds = [...Array(N_CELLS)].map((_, k) => -Math.PI/2 + k * STEP);   // boundary angles; even = rising, odd = sinking
+const bounds = [...Array(N_CELLS)].map((_, k) => -Math.PI/2 + k * STEP);   // even = rising (ridge), odd = sinking (trench)
 const cells = [...Array(N_CELLS)].map((_, i) => ({ mid: bounds[i] + STEP/2, dir: i % 2 ? 1 : -1 }));
 const particles = [];
-cells.forEach((c, ci) => { for (let j=0;j<110;j++) particles.push({ ci, t: Math.random()*Math.PI*2, k: .45 + Math.random()*.55 }); });
-const lerpCol = (a, b, t) => `rgb(${a.map((v,i) => Math.round(v + (b[i]-v)*t)).join(',')})`;
-const COOL = [77,159,255], HOT = [255,241,168];
+cells.forEach((c, ci) => { for (let j=0;j<120;j++) particles.push({ ci, t: Math.random()*Math.PI*2, k: .4 + Math.random()*.6 }); });
+const angDist = (a, b) => { let d = (a - b) % (Math.PI*2); if (d > Math.PI) d -= Math.PI*2; if (d < -Math.PI) d += Math.PI*2; return d; };
+
+let geo = null, bg = null;
+function convGeometry(){
+  const w = cv.clientWidth, h = cv.clientHeight;
+  const side = w > 800 ? 410 : 0;
+  const cx = (w - side) / 2, cy = h / 2 + 34;
+  const R = Math.min((w - side) * .4, (h - 150) * .42);
+  return { w, h, cx, cy, R, rCore:R*.546, rInner:R*.191, rTop:R*.955 };
+}
+function buildBackground(G){
+  // Pre-render the mantle temperature field and core at 1x
+  const S = Math.ceil(G.R*2) + 4, img = new ImageData(S, S), o = S/2;
+  const stops = [[0,[58,14,6]],[.35,[143,42,16]],[.7,[224,96,30]],[1,[255,210,122]]];
+  const ramp = t => { t = Math.max(0, Math.min(1, t)); for (let i=1;i<stops.length;i++){ if (t <= stops[i][0]){ const [t0,c0] = stops[i-1], [t1,c1] = stops[i], f = (t-t0)/(t1-t0); return c0.map((v,j) => v + (c1[j]-v)*f); } } return stops[3][1]; };
+  for (let y=0;y<S;y++) for (let x=0;x<S;x++){
+    const dx = x - o, dy = y - o, r = Math.hypot(dx, dy);
+    if (r > G.R) continue;
+    const a = Math.atan2(dy, dx), i = (y*S + x)*4;
+    const nx = dx / G.R, ny = dy / G.R;
+    let c;
+    if (r < G.rInner){
+      const t = r / G.rInner, n = vnoise(nx*60, ny*60);
+      c = [255, 246 - t*30, 210 - t*80].map(v => v*(.92 + .08*n));
+    } else if (r < G.rCore){
+      const t = (r - G.rInner)/(G.rCore - G.rInner), n = fbm2(nx*7 + fbm2(nx*3, ny*3)*2, ny*7);
+      c = [250 - t*30, 170 - t*90 + n*50, 60 - t*40 + n*20];
+    } else {
+      // temperature: hotter at depth, hotter above rising currents, cooler above sinking ones
+      const depthT = 1 - (r - G.rCore)/(G.R - G.rCore);
+      let plume = 0;
+      bounds.forEach((b, k) => { const d = angDist(a, b); const wv = .09 + .05*(1 - depthT); plume += (k % 2 ? -1 : 1) * Math.exp(-(d*d)/(wv*wv)); });
+      const n = fbm2(nx*9 + fbm2(nx*4, ny*4)*1.5, ny*9);
+      const grain = vnoise(nx*160, ny*160);
+      const t = .15 + depthT*.55 + plume*.32 + (n - .5)*.35;
+      c = ramp(t).map(v => v*(.9 + .14*grain));
+    }
+    img.data[i] = c[0]; img.data[i+1] = c[1]; img.data[i+2] = c[2]; img.data[i+3] = 255;
+  }
+  const oc = document.createElement('canvas'); oc.width = S; oc.height = S;
+  oc.getContext('2d').putImageData(img, 0, 0);
+  return oc;
+}
+
+// Fill a polar band between two radius functions
+function band(cx, cy, a0, a1, top, bot, steps = 90){
+  g.beginPath();
+  for (let i=0;i<=steps;i++){ const a = a0 + (a1-a0)*i/steps, r = top(a); g.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r); }
+  for (let i=steps;i>=0;i--){ const a = a0 + (a1-a0)*i/steps, r = bot(a); g.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r); }
+  g.closePath();
+}
 
 function drawConvection(dt){
   const w = cv.clientWidth, h = cv.clientHeight, dpr = Math.min(devicePixelRatio, 2);
-  if (cv.width !== w*dpr || cv.height !== h*dpr){ cv.width = w*dpr; cv.height = h*dpr; }
-  const g = cx2; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
-  const side = w > 800 ? 410 : 0;
-  const cx = (w - side) / 2, cy = h / 2 + 30;
-  const R = Math.min((w - side) * .4, (h - 130) * .42);
-  if (R < 40) return;
-  const rCrust = R * .94, rCore = R * .546, rInner = R * .191;
-  const cellIn = rCore * 1.05, cellOut = rCrust * .96, rMid = (cellIn + cellOut)/2, halfH = (cellOut - cellIn)/2;
-  const halfW = STEP/2 * .9;
+  if (cv.width !== w*dpr || cv.height !== h*dpr){ cv.width = w*dpr; cv.height = h*dpr; geo = null; }
+  if (!geo){ geo = convGeometry(); if (geo.R < 40) { geo = null; return; } bg = buildBackground(geo); }
+  const { cx, cy, R, rCore } = geo;
+  g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
   if (convPlaying) convTime += dt;
 
-  // Mantle
-  let gr = g.createRadialGradient(cx, cy, rCore, cx, cy, rCrust);
-  gr.addColorStop(0, '#f07a32'); gr.addColorStop(1, '#8f2c16');
-  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCrust, 0, Math.PI*2); g.fill();
-  // Core
-  gr = g.createRadialGradient(cx, cy, rInner*.3, cx, cy, rCore);
-  gr.addColorStop(0, '#fff6c8'); gr.addColorStop(.35, '#ffd25a'); gr.addColorStop(1, '#e8781f');
-  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCore, 0, Math.PI*2); g.fill();
-  // Core glow
-  gr = g.createRadialGradient(cx, cy, rCore*.9, cx, cy, rCore*1.25);
-  gr.addColorStop(0, 'rgba(255,220,120,.35)'); gr.addColorStop(1, 'rgba(255,220,120,0)');
-  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, rCore*1.25, 0, Math.PI*2); g.fill();
+  // Faint glow around the planet
+  let gr = g.createRadialGradient(cx, cy, R*.98, cx, cy, R*1.12);
+  gr.addColorStop(0, 'rgba(90,150,255,.25)'); gr.addColorStop(1, 'rgba(90,150,255,0)');
+  g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, R*1.12, 0, Math.PI*2); g.fill();
 
-  // Particles (streaks)
+  g.drawImage(bg, cx - bg.width/2, cy - bg.height/2);
+
+  // Flow streaks in the mantle
+  const rIn = rCore*1.06, rOut = R*.9, rMid = (rIn + rOut)/2, halfH = (rOut - rIn)/2, halfW = STEP/2*.92;
   const pos = (c, t, k) => { const a = c.mid + halfW*k*Math.cos(t), r = rMid + halfH*k*Math.sin(t); return [cx + Math.cos(a)*r, cy + Math.sin(a)*r]; };
-  const speed = .55;
-  g.lineCap = 'round';
+  const speed = .45;
+  g.lineCap = 'round'; g.globalCompositeOperation = 'lighter';
   particles.forEach(p => {
     const c = cells[p.ci];
     if (convPlaying) p.t += c.dir * speed * dt;
-    const temp = .5 + .5 * Math.cos(p.t) * c.dir;
-    const [x1, y1] = pos(c, p.t, p.k), [x0, y0] = pos(c, p.t - c.dir*.22, p.k);
-    g.strokeStyle = lerpCol(COOL, HOT, temp); g.globalAlpha = .85; g.lineWidth = 2.4;
+    const [x1, y1] = pos(c, p.t, p.k), [x0, y0] = pos(c, p.t - c.dir*.28, p.k);
+    const grd = g.createLinearGradient(x0, y0, x1, y1);
+    grd.addColorStop(0, 'rgba(255,220,170,0)'); grd.addColorStop(1, 'rgba(255,230,190,.42)');
+    g.strokeStyle = grd; g.lineWidth = 1.8;
     g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
   });
-  g.globalAlpha = 1;
-  // Big arrowheads around each cell
+  g.globalCompositeOperation = 'source-over';
+  // Direction arrows
   cells.forEach(c => {
     for (let j=0;j<4;j++){
       const t = convTime * c.dir * speed + j * Math.PI/2;
-      const [x, y] = pos(c, t, .72), [xb, yb] = pos(c, t - c.dir*.05, .72);
-      const ang = Math.atan2(y - yb, x - xb), s = Math.max(9, R*.035);
-      g.fillStyle = 'rgba(255,255,255,.9)';
+      const [x, y] = pos(c, t, .7), [xb, yb] = pos(c, t - c.dir*.05, .7);
+      const ang = Math.atan2(y - yb, x - xb), s = Math.max(8, R*.03);
+      g.fillStyle = 'rgba(255,255,255,.75)';
       g.beginPath(); g.moveTo(x + Math.cos(ang)*s, y + Math.sin(ang)*s);
-      g.lineTo(x + Math.cos(ang+2.5)*s, y + Math.sin(ang+2.5)*s);
-      g.lineTo(x + Math.cos(ang-2.5)*s, y + Math.sin(ang-2.5)*s); g.closePath(); g.fill();
+      g.lineTo(x + Math.cos(ang+2.6)*s, y + Math.sin(ang+2.6)*s);
+      g.lineTo(x + Math.cos(ang-2.6)*s, y + Math.sin(ang-2.6)*s); g.closePath(); g.fill();
     }
   });
 
-  // Plates
-  const gapA = .035;
+  // ---------- Surface: plates, ocean, continents ----------
+  const wD = R*.028, oT = R*.024, cT = R*.075;              // water depth, oceanic and continental crust thickness (exaggerated)
+  const seaR = R, floorR = R - wD;
+  const plateV = speed * halfW * .35;                        // angular speed of the sea floor
+  const slabSpan = .2;
+
+  // Lithosphere base shading
+  g.fillStyle = 'rgba(40,14,8,.45)';
+  g.beginPath(); g.arc(cx, cy, R, 0, Math.PI*2); g.arc(cx, cy, R - wD - oT - R*.02, 0, Math.PI*2, true); g.fill('evenodd');
+
   for (let k=0;k<N_CELLS;k++){
-    const a0 = bounds[k] + gapA, a1 = bounds[(k+1) % N_CELLS] + (k === N_CELLS-1 ? Math.PI*2 : 0) - gapA;
-    g.fillStyle = '#a87b52';
-    g.beginPath(); g.arc(cx, cy, R, a0, a1); g.arc(cx, cy, rCrust, a1, a0, true); g.closePath(); g.fill();
-    // moving tick marks show plate motion
-    const v = -cells[k].dir * speed * halfW * .5;  // angular speed of the plate surface
-    g.save(); g.beginPath(); g.arc(cx, cy, R, a0, a1); g.arc(cx, cy, rCrust, a1, a0, true); g.closePath(); g.clip();
-    g.strokeStyle = 'rgba(60,38,20,.55)'; g.lineWidth = 2;
-    const spacing = .06, off = ((convTime * v) % spacing + spacing) % spacing;
-    for (let a = a0 - spacing + off; a < a1 + spacing; a += spacing){
-      g.beginPath(); g.moveTo(cx + Math.cos(a)*rCrust, cy + Math.sin(a)*rCrust); g.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R); g.stroke();
+    const a0 = bounds[k], a1 = bounds[k] + STEP;
+    const ridgeA = k % 2 ? a1 : a0, trenchA = k % 2 ? a0 : a1;
+    const toTrench = Math.sign(trenchA - ridgeA);
+    // Continent sits on the plate that overrides the trench (odd plates)
+    const hasCont = k % 2 === 1;
+    const cStart = a0 + .004, cEnd = a0 + STEP*.48;
+    const floorTop = a => {
+      const dr = Math.abs(a - ridgeA), dtr = Math.abs(a - trenchA);
+      return floorR + R*.012*Math.exp(-(dr*dr)/(.05*.05)) - (hasCont ? 0 : R*.022*Math.exp(-(dtr*dtr)/(.018*.018)));
+    };
+    const floorBot = a => floorTop(a) - oT;
+    // Water
+    g.fillStyle = '#103f73';
+    band(cx, cy, a0, a1, () => seaR, floorTop); g.fill();
+    gr = g.createRadialGradient(cx, cy, floorR, cx, cy, seaR);
+    gr.addColorStop(0, 'rgba(8,30,60,.9)'); gr.addColorStop(1, 'rgba(50,130,200,.9)');
+    g.fillStyle = gr; band(cx, cy, a0, a1, () => seaR, floorTop); g.fill();
+    // Oceanic crust with magnetic stripes that move away from the ridge
+    const oa0 = hasCont ? cEnd - .06 : a0 + .002, oa1 = a1 - .002;
+    const slices = 120;
+    for (let i=0;i<slices;i++){
+      const s0 = oa0 + (oa1 - oa0)*i/slices, s1 = oa0 + (oa1 - oa0)*(i+1)/slices;
+      const d = Math.abs((s0 + s1)/2 - ridgeA) - convTime*plateV;
+      const stripe = Math.floor(d / .035 + 3*vnoise(Math.floor(d/.035), k)) % 2;
+      g.fillStyle = stripe ? '#3a4049' : '#555d68';
+      band(cx, cy, s0, s1 + .0005, floorTop, floorBot, 2); g.fill();
     }
-    g.restore();
-    // plate motion arrow outside the Earth
-    const am = (a0 + a1) / 2, ra = R + Math.max(16, R*.07), len = .22 * Math.sign(v);
-    g.strokeStyle = '#fff'; g.lineWidth = 3;
+    // Thin sediment that thickens away from the ridge
+    g.fillStyle = 'rgba(140,125,100,.85)';
+    band(cx, cy, oa0, oa1, a => floorTop(a), a => floorTop(a) - Math.min(R*.006, Math.abs(a - ridgeA)*R*.03)); g.fill();
+
+    // Sinking slab beneath the next plate
+    if (!hasCont){
+      const segs = 26;
+      for (let i=0;i<segs;i++){
+        const s0 = i/segs, s1 = (i+1)/segs;
+        const ang = s => trenchA + toTrench * s * slabSpan;
+        const top = s => floorTop(trenchA) - Math.pow(s, 1.25) * R*.32;
+        g.fillStyle = `rgba(78,86,98,${(1 - s0*.6).toFixed(3)})`;
+        g.beginPath();
+        [[s0,0],[s1,0],[s1,1],[s0,1]].forEach(([s, b], j) => {
+          const r = top(s) - b*oT*1.6, a = ang(s);
+          g[j ? 'lineTo' : 'moveTo'](cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+        });
+        g.closePath(); g.fill();
+      }
+    }
+    // Continent
+    if (hasCont){
+      const volcA = cStart + .055;
+      const elev = a => {
+        const t = (a - cStart) / (cEnd - cStart);
+        const coast = 1 - Math.pow(Math.max(0, t - .7)/.3, 1.5);
+        const mtn = R*.035*Math.exp(-Math.pow((a - (cStart + .065))/.035, 2)) + R*.012*fbm2(a*90, k) ;
+        return seaR + (R*.006 + mtn) * Math.max(0, coast) - (t > .92 ? (t - .92)/.08 * wD : 0);
+      };
+      const base = a => {
+        const t = (a - cStart) / (cEnd - cStart);
+        const root = R*.03*Math.exp(-Math.pow((a - (cStart + .065))/.04, 2));
+        return seaR - cT - root + Math.max(0, t - .75)/.25 * (cT - wD - oT);
+      };
+      gr = g.createRadialGradient(cx, cy, R - cT - R*.03, cx, cy, R + R*.04);
+      gr.addColorStop(0, '#6e5442'); gr.addColorStop(1, '#b48e6a');
+      g.fillStyle = gr; band(cx, cy, cStart, cEnd, elev, base, 140); g.fill();
+      // Plants on the land surface
+      g.strokeStyle = '#4f6e35'; g.lineWidth = 3; g.beginPath();
+      for (let i=0;i<=100;i++){ const a = cStart + (cEnd - .03 - cStart)*i/100, r = elev(a); g.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r); }
+      g.stroke();
+      // Volcano fed by melting above the sinking slab
+      const vr = elev(volcA), vh = R*.03;
+      const p = (a, r) => [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
+      g.fillStyle = '#5a4436'; g.beginPath();
+      g.moveTo(...p(volcA - .022, vr - R*.005)); g.lineTo(...p(volcA - .004, vr + vh)); g.lineTo(...p(volcA + .004, vr + vh)); g.lineTo(...p(volcA + .022, vr - R*.005)); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(255,120,40,.85)'; g.lineWidth = 2.5; g.beginPath();
+      g.moveTo(...p(volcA + .03, R*.8)); g.quadraticCurveTo(...p(volcA + .01, R*.9), ...p(volcA, vr + vh)); g.stroke();
+      const pulse = .6 + .4*Math.sin(convTime*3);
+      gr = g.createRadialGradient(...p(volcA, vr + vh), 0, ...p(volcA, vr + vh), R*.03);
+      gr.addColorStop(0, `rgba(255,150,60,${pulse})`); gr.addColorStop(1, 'rgba(255,150,60,0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(...p(volcA, vr + vh), R*.03, 0, Math.PI*2); g.fill();
+      // Ash plume
+      g.fillStyle = 'rgba(120,120,125,.5)';
+      for (let i=0;i<5;i++){ const q = p(volcA - .01*i, vr + vh + R*(.01 + .014*i)); g.beginPath(); g.arc(q[0], q[1], R*(.008 + .004*i), 0, Math.PI*2); g.fill(); }
+    }
+    // Plate motion arrow outside the planet
+    const am = (a0 + a1)/2, ra = R + Math.max(22, R*.1), len = .22 * toTrench;
+    g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 3;
     g.beginPath(); g.arc(cx, cy, ra, am - len/2, am + len/2, len < 0); g.stroke();
-    const ae = am + len/2, tx = cx + Math.cos(ae)*ra, ty = cy + Math.sin(ae)*ra, tang = ae + Math.sign(v)*Math.PI/2, s = 10;
+    const ae = am + len/2, tx = cx + Math.cos(ae)*ra, ty = cy + Math.sin(ae)*ra, tang = ae + toTrench*Math.PI/2, s = 10;
     g.fillStyle = '#fff'; g.beginPath(); g.moveTo(tx + Math.cos(tang)*s, ty + Math.sin(tang)*s);
     g.lineTo(tx + Math.cos(tang+2.4)*s, ty + Math.sin(tang+2.4)*s); g.lineTo(tx + Math.cos(tang-2.4)*s, ty + Math.sin(tang-2.4)*s); g.closePath(); g.fill();
   }
-  // Boundaries: magma at rising, sinking slab at sinking
+  // Magma rising under each ridge
   bounds.forEach((b, k) => {
-    if (k % 2 === 0){
-      g.fillStyle = '#ffb347';
-      g.beginPath(); g.arc(cx, cy, R*.995, b - gapA, b + gapA); g.arc(cx, cy, rCrust*.97, b + gapA*.6, b - gapA*.6, true); g.closePath(); g.fill();
-    } else {
-      g.fillStyle = '#8a6342';
-      const d = R*.12, a = b - gapA*1.2;
-      g.beginPath();
-      g.moveTo(cx + Math.cos(b - gapA)*rCrust, cy + Math.sin(b - gapA)*rCrust);
-      g.lineTo(cx + Math.cos(b)*(rCrust - d), cy + Math.sin(b)*(rCrust - d));
-      g.lineTo(cx + Math.cos(b - gapA*.2)*(rCrust - d*.85), cy + Math.sin(b - gapA*.2)*(rCrust - d*.85));
-      g.lineTo(cx + Math.cos(b + gapA)*rCrust, cy + Math.sin(b + gapA)*rCrust); g.closePath(); g.fill();
-    }
+    if (k % 2) return;
+    const p = r => [cx + Math.cos(b)*r, cy + Math.sin(b)*r];
+    gr = g.createLinearGradient(...p(R*.8), ...p(floorR + R*.012));
+    gr.addColorStop(0, 'rgba(255,140,40,0)'); gr.addColorStop(.6, 'rgba(255,150,50,.8)'); gr.addColorStop(1, 'rgba(255,220,120,1)');
+    g.strokeStyle = gr; g.lineWidth = 3.5; g.beginPath(); g.moveTo(...p(R*.8)); g.lineTo(...p(floorR + R*.012)); g.stroke();
   });
 
   if (!convLabels) return;
-  const fs = Math.max(14, Math.min(20, R*.06));
+  const fs = Math.max(13, Math.min(19, R*.055));
   g.font = `600 ${fs}px system-ui,sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-  const tag = (txt, x, y, col='#fff') => {
+  const tag = (txt, x, y, col = '#fff') => {
     const tw = g.measureText(txt).width + 18;
-    g.fillStyle = 'rgba(5,7,13,.8)'; g.beginPath(); g.roundRect(x - tw/2, y - fs*.8, tw, fs*1.6, 8); g.fill();
+    g.fillStyle = 'rgba(3,5,10,.82)'; g.beginPath(); g.roundRect(x - tw/2, y - fs*.8, tw, fs*1.6, 8); g.fill();
     g.fillStyle = col; g.fillText(txt, x, y);
   };
+  const at = (a, r) => [cx + Math.cos(a)*r, cy + Math.sin(a)*r];
+  const lr = R + Math.max(52, R*.2);
   tag('Core: heat source', cx, cy, '#ffd25a');
-  tag('Mantle', cx + Math.cos(cells[1].mid)*rMid, cy + Math.sin(cells[1].mid)*rMid);
-  const lr = R + Math.max(44, R*.17);
-  tag('Plates move apart', cx + Math.cos(bounds[0])*lr, cy + Math.sin(bounds[0])*lr, '#7ee2a8');
-  tag('Plates move together', cx + Math.cos(bounds[1])*lr + 40, cy + Math.sin(bounds[1])*lr, '#ff8a8a');
-  tag('Hot rock rises', cx + Math.cos(bounds[2])*rMid, cy + Math.sin(bounds[2])*rMid, '#fff1a8');
-  tag('Cooler rock sinks', cx + Math.cos(bounds[3])*rMid, cy + Math.sin(bounds[3])*rMid, '#9cc9ff');
+  tag('Mid-ocean ridge: plates move apart', ...at(bounds[0], lr), '#7ee2a8');
+  { const [x, y] = at(bounds[1], lr); tag('Trench: plates move together', x + 70, y, '#ff8a8a'); }
+  { const va = bounds[1] + .059, [px, py] = at(va, R*1.06), [x, y] = at(va, lr);
+    g.strokeStyle = 'rgba(255,178,122,.8)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(px, py); g.lineTo(x + 30, y + 40); g.stroke();
+    tag('Volcano', x + 40, y + 46, '#ffb27a'); }
+  tag('Hot rock rises', ...at(bounds[2], rMid*.97), '#fff1a8');
+  tag('Cooler rock sinks', ...at(bounds[5], rMid*.97), '#9cc9ff');
+  tag('Sinking plate', ...at(bounds[3] + .12, R*.8), '#c9d3df');
+  tag('Continental crust', ...at(bounds[3] + .32, lr*.98), '#e2c3a0');
+  tag('Oceanic crust', ...at(bounds[4] + .5, lr*.98), '#c9d3df');
 }
 
 /* ---------------- Loop ---------------- */
@@ -572,26 +828,36 @@ function resize(){
   const w = canvas.clientWidth, h = canvas.clientHeight;
   if (!w || !h) return;
   renderer.setSize(w, h, false);
+  composer.setSize(w, h);
+  bloom.resolution.set(w, h);
   camera.aspect = w / h;
-  // Shift the globe left of the info card on wide screens
   camera.setViewOffset(w, h, w > 900 ? 120 : 0, w > 900 ? 0 : h * .08, w, h);
   camera.zoom = w < 800 ? .62 : 1;
   camera.updateProjectionMatrix();
+  geo = null;
 }
 addEventListener('resize', resize);
 
+const clock = new THREE.Clock();
 let last = performance.now();
+const sunOffset = new THREE.Vector3();
 function frame(now){
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (current === 'layers'){
+    const t = clock.getElapsedTime();
     controls.update();
-    sun.position.copy(camera.position).add(new THREE.Vector3(1, 2, 0));
-    renderer.render(scene, camera);
+    // Sun comes from over the viewer's left shoulder so the cut is lit and the far side falls into night
+    sunOffset.set(-camera.position.z, 1.2, camera.position.x).normalize().multiplyScalar(1.6).add(camera.position);
+    sun.position.copy(sunOffset);
+    cloudMat.uniforms.uTime.value = t;
+    cloudMat.uniforms.uSun.value.copy(sun.position).normalize();
+    faceUniforms.forEach(u => u.uTime.value = t);
+    composer.render();
     placeLabels();
   } else if (current === 'conv') drawConvection(dt);
   requestAnimationFrame(frame);
 }
-resize(); select(0); drawLabels();
+resize(); renderInfo(); drawLabels(); updateList();
 requestAnimationFrame(frame);
 </script>
 </body>
